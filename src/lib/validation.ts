@@ -152,14 +152,24 @@ export function sanitizeUrl(value: string | undefined | null): string {
 }
 
 // Sanitasi text umum (escape karakter berbahaya)
-export function sanitizeText(value: string | undefined | null): string {
-  if (!value || typeof value !== 'string') return ''
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
+// export function sanitizeText(value: string | undefined | null): string {
+// if (!value || typeof value !== 'string') return ''
+//  return value
+//    .replace(/&/g, '&amp;')
+//    .replace(/</g, '&lt;')
+//    .replace(/>/g, '&gt;')
+//    .replace(/"/g, '&quot;')
+//    .replace(/'/g, '&#x27;')
+// }
+
+// PENTING: Jangan escape HTML di sini!
+// React sudah auto-escape saat render.
+export function sanitizeText(value: string | undefined | null): string {  
+  if (!value || typeof value !== 'string') return ''  
+    return value
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .trim()
 }
 
 // Sanitasi untuk attribute HTML (lebih strict)
