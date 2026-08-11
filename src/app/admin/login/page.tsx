@@ -1,0 +1,177 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { Lock, Heart, Sparkles, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import {
+  isRequired, minLength, maxLength,
+  ValidationErrors, hasErrors
+} from '@/lib/validation'
+
+export default function AdminLogin() {
+  const router = useRouter()
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<ValidationErrors>({})
+
+  const validateLogin = (): boolean => {
+    const newErrors: ValidationErrors = {}
+
+    // Password wajib diisi
+    const requiredErr = isRequired(password, 'Password')
+    if (requiredErr) {
+      newErrors.password = requiredErr
+    } else {
+      // Minimal 6 karakter
+      const minErr = minLength(password, 6)
+      if (minErr) newErrors.password = minErr
+
+      // Maksimal 100 karakter (anti-spam)
+      const maxErr = maxLength(password, 100)
+      if (maxErr) newErrors.password = maxErr
+
+      // Tidak boleh hanya spasi
+      if (password.trim() === '') {
+        newErrors.password = 'Password tidak boleh hanya spasi'
+      }
+    }
+
+    setErrors(newErrors)
+    return !hasErrors(newErrors)
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validasi client-side
+    if (!validateLogin()) {
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: password.trim() }),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        localStorage.setItem('admin_auth', 'true')
+        toast.success('Selamat datang! 🎉')
+        setErrors({})
+        router.push('/admin')
+      } else {
+        // Server menolak password → tampilkan error di field password
+        setErrors({ password: data.message || 'Password salah. Silakan coba lagi.' })
+        setPassword('')
+      }
+    } catch (err) {
+      toast.error('Terjadi kesalahan koneksi. Silakan coba lagi.')
+      setErrors({ password: 'Gagal terhubung ke server' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value)
+    // Auto-clear error saat user mengetik
+    if (errors.password) {
+      setErrors({})
+    }
+  }
+
+  return (
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#FBF8F3] via-[#F7E7CE]/30 to-[#DCAE96]/20 flex items-center justify-center px-4">
+      <div className="absolute top-20 -left-20 w-96 h-96 bg-[#C9A96E]/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-20 -right-20 w-96 h-96 bg-[#DCAE96]/10 rounded-full blur-3xl"></div>
+
+      <motion.div
+        className="w-full max-w-md relative z-10"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-8 md:p-10">
+          <div className="text-center mb-8">
+            <motion.div
+              className="w-20 h-20 mx-auto mb-6 relative"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#C9A96E] to-[#DCAE96] rounded-3xl rotate-6"></div>
+              <div className="relative w-full h-full bg-white rounded-3xl shadow-xl flex items-center justify-center">
+                <Heart className="text-[#C9A96E]" size={32} fill="currentColor" />
+              </div>
+              <Sparkles size={20} className="absolute -top-2 -right-2 text-[#C9A96E]" />
+            </motion.div>
+
+            <h1 className="font-display text-3xl text-[#6B5B5B] mb-2">Admin Panel</h1>
+            <p className="text-sm text-[#6B5B5B]/60">Wedding Invitation Management</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => handlePasswordChange(e.target.value)}
+              placeholder="Masukkan password admin"
+              icon={<Lock size={18} />}
+              error={errors.password}
+              required
+              autoComplete="current-password"
+              disabled={loading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleLogin(e)
+                }
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="flex items-center gap-1.5 text-xs text-[#C9A96E] hover:text-[#B8935A] transition-colors font-medium"
+              disabled={loading}
+            >
+              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              {showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+            </button>
+
+            <Button
+              type="submit"
+              loading={loading}
+              fullWidth
+              size="lg"
+              icon={<Lock size={18} />}
+              disabled={loading}
+            >
+              Masuk ke Dashboard
+            </Button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <div className="flex items-center justify-center gap-2 text-[#6B5B5B]/40 text-xs">
+              <div className="w-8 h-px bg-[#C9A96E]/30"></div>
+              <Heart size={12} fill="currentColor" />
+              <div className="w-8 h-px bg-[#C9A96E]/30"></div>
+            </div>
+            <p className="mt-3 text-xs text-[#6B5B5B]/50">
+              Protected area - Authorized personnel only
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
