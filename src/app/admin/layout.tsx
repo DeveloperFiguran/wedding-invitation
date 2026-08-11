@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { AdminHeader } from '@/components/admin/AdminHeader'
+import { authClient } from '@/lib/auth-client'
 import { Heart, Menu, X } from 'lucide-react'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -17,18 +18,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isPublicRoute = pathname === '/admin/login'
 
   useEffect(() => {
-    const auth = localStorage.getItem('admin_auth')
-    if (isPublicRoute) {
-      if (auth === 'true') router.push('/admin')
+    async function checkAuth() {
+      if (isPublicRoute) {
+        // Jika sudah login dan akses /login, redirect ke dashboard
+        const result = await authClient.verify()
+        if (result.authenticated) {
+          router.push('/admin')
+        }
+        setLoading(false)
+        return
+      }
+
+      // Verifikasi token di server
+      const result = await authClient.verify()
+
+      if (!result.authenticated) {
+        authClient.clearToken()
+        router.push('/admin/login')
+      } else {
+        setIsAuthenticated(true)
+      }
       setLoading(false)
-      return
     }
-    if (auth !== 'true') {
-      router.push('/admin/login')
-    } else {
-      setIsAuthenticated(true)
-    }
-    setLoading(false)
+
+    checkAuth()
   }, [pathname, isPublicRoute, router])
 
   if (loading) {
@@ -40,21 +53,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="absolute inset-0 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin"></div>
             <Heart className="absolute inset-0 m-auto text-[#C9A96E] animate-pulse" size={20} />
           </div>
-          <p className="font-elegant text-[#6B5B5B] italic">Memuat panel admin...</p>
+          <p className="font-elegant text-[#6B5B5B] italic">Memverifikasi sesi...</p>
         </div>
       </div>
     )
   }
 
   if (!isAuthenticated && !isPublicRoute) return null
-
-  if (isPublicRoute) {
-    return <>{children}</>
-  }
+  if (isPublicRoute) return <>{children}</>
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAF8F5] to-[#F7E7CE]/20">
-      {/* Mobile menu button */}
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-white rounded-xl shadow-lg border border-[#C9A96E]/20 text-[#6B5B5B]"
@@ -62,12 +71,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Desktop Sidebar */}
       <aside className="hidden lg:block fixed inset-y-0 left-0 w-72 border-r border-[#C9A96E]/10 shadow-xl z-40">
         <AdminSidebar />
       </aside>
 
-      {/* Mobile Sidebar */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
@@ -91,20 +98,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         )}
       </AnimatePresence>
 
-      {/* ====== MAIN AREA ====== */}
       <div className="lg:pl-72 flex flex-col min-h-screen">
         <AdminHeader />
-
         <main className="flex-1 px-4 md:px-6 lg:px-8 py-6 md:py-8 pt-20 lg:pt-8">
-          {/* Container pembatas lebar - FIX content terlalu lebar */}
-          <div className="mx-auto w-full">
-            {children}
-          </div>
+          {children}
         </main>
-
-        {/* Footer */}
         <footer className="px-4 md:px-6 lg:px-8 py-5 border-t border-[#C9A96E]/10">
-          <div className="mx-auto flex items-center justify-between text-caption text-[#6B5B5B]/50">
+          <div className="flex items-center justify-between text-caption text-[#6B5B5B]/50">
             <span>© {new Date().getFullYear()} Wedding Invitation</span>
             <span className="font-elegant italic">Made with ♥</span>
           </div>

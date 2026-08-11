@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { verifySessionToken } from '@/lib/auth'
 
 // Middleware sederhana: cek password admin
 async function verifyAdmin(request: NextRequest): Promise<boolean> {
-  const authHeader = request.headers.get('x-admin-auth')
-  return authHeader === process.env.ADMIN_PASSWORD
+  const authHeader = request.headers.get('authorization')
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+  const result = verifySessionToken(token)
+  return result.valid
 }
 
 // DELETE tamu (operasi sensitif)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { verifySessionToken } from '@/lib/auth'
 
 const MAX_SIZE_MB = 5
 const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif']
@@ -16,19 +17,10 @@ const MAGIC_BYTES: Record<string, number[][]> = {
 
 // Verifikasi admin via header
 async function verifyAdmin(request: NextRequest): Promise<boolean> {
-  const authHeader = request.headers.get('x-admin-auth')
-  const adminPassword = process.env.ADMIN_PASSWORD
-
-  if (!adminPassword || !authHeader) return false
-
-  // Timing-safe comparison
-  if (authHeader.length !== adminPassword.length) return false
-
-  let mismatch = 0
-  for (let i = 0; i < adminPassword.length; i++) {
-    mismatch |= authHeader.charCodeAt(i) ^ adminPassword.charCodeAt(i)
-  }
-  return mismatch === 0
+  const authHeader = request.headers.get('authorization')
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+  const result = verifySessionToken(token)
+  return result.valid
 }
 
 // Validasi file di server

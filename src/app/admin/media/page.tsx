@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { isValidImageUrl } from '@/lib/validation'
+import { authenticatedFetch } from '@/lib/auth-client'
 import {
   Upload, Copy, Check, Trash2, ExternalLink,
-  FolderOpen, Loader2, RefreshCw, Images as ImagesIcon
+  FolderOpen, Loader2, RefreshCw, Images as ImagesIcon,
+  ShieldCheck
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { copyToClipboard } from '@/lib/utils'
@@ -45,12 +47,9 @@ export default function AdminMedia() {
     file: null,
   })
   const [deleting, setDeleting] = useState(false)
-  const [adminPassword, setAdminPassword] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const pwd = localStorage.getItem('admin_password')
-    if (pwd) setAdminPassword(pwd)
     fetchMedia()
   }, [])
 
@@ -138,19 +137,12 @@ export default function AdminMedia() {
   }
 
   /* ============================================
-     Upload via API Route (server-side, service role)
+     Upload via API Route dengan token auth
      ============================================ */
   async function uploadFiles(files: FileList | File[]) {
     const fileArray = Array.from(files).filter((f) => f.type.startsWith('image/'))
     if (fileArray.length === 0) {
       toast.error('Tidak ada gambar yang valid')
-      return
-    }
-
-    // Cek sesi admin
-    if (!adminPassword) {
-      toast.error('Sesi admin tidak valid. Silakan login ulang.')
-      window.location.href = '/admin/login'
       return
     }
 
@@ -172,11 +164,9 @@ export default function AdminMedia() {
         const formData = new FormData()
         formData.append('file', file)
 
-        const res = await fetch('/api/admin/media', {
+        // authenticatedFetch otomatis attach token & auto-logout jika expired
+        const res = await authenticatedFetch('/api/admin/media', {
           method: 'POST',
-          headers: {
-            'x-admin-auth': adminPassword,
-          },
           body: formData,
         })
 
@@ -243,22 +233,17 @@ export default function AdminMedia() {
   }
 
   /* ============================================
-     Delete via API Route
+     Delete via API Route dengan token auth
      ============================================ */
   const handleDelete = async () => {
     if (!deleteDialog.file) return
-    if (!adminPassword) {
-      toast.error('Sesi admin tidak valid')
-      return
-    }
 
     setDeleting(true)
     try {
-      const res = await fetch('/api/admin/media', {
+      const res = await authenticatedFetch('/api/admin/media', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-auth': adminPassword,
         },
         body: JSON.stringify({ filename: deleteDialog.file.name }),
       })
@@ -331,8 +316,8 @@ export default function AdminMedia() {
               Format: JPG, PNG, WEBP, GIF · Maks {MAX_FILE_SIZE_MB}MB per gambar
             </p>
             <div className="mt-2 flex items-center gap-2 text-caption text-[#C9A96E]">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span>Upload aman via server dengan validasi magic bytes</span>
+              <ShieldCheck size={14} />
+              <span>Upload aman via server dengan token authentication</span>
             </div>
           </div>
         )}
@@ -455,8 +440,12 @@ export default function AdminMedia() {
           <li>Klik tombol <strong>Copy URL</strong> pada gambar yang diinginkan</li>
           <li>Paste URL tersebut ke input gambar di Pengaturan, Gallery, Documentary, atau Love Story</li>
         </ol>
-        <div className="mt-3 pt-3 border-t border-[#C9A96E]/20 text-caption text-[#6B5B5B]/60">
-          🔒 <strong>Keamanan:</strong> File divalidasi magic bytes, ekstensi, ukuran, dan path traversal di server sebelum disimpan.
+        <div className="mt-3 pt-3 border-t border-[#C9A96E]/20 flex items-start gap-2 text-caption text-[#6B5B5B]/60">
+          <ShieldCheck size={14} className="text-green-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <strong>Keamanan:</strong> File divalidasi magic bytes, ekstensi, ukuran, dan path traversal di server.
+            Upload & hapus dilindungi token authentication (session 24 jam).
+          </div>
         </div>
       </div>
 

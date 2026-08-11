@@ -1,45 +1,94 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateSessionToken, verifyPassword } from '@/lib/auth'
 
-// Rate limiting sederhana (in-memory)
-const attempts = new Map<string, { count: number; lastAttempt: number }>()
+// Simple rate limiting (production sebaiknya pakai Redis/Upstash)
+const attempts = new Map<string, { count: number; resetAt: number }>()
 const MAX_ATTEMPTS = 5
-const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 menit
+const LOCKOUT_MS = 15 * 60 * 1000 // 15 menit
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  )
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now()
+  const record = attempts.get(ip)
+
+  if (!record || now > record.resetAt) {
+    attempts.set(ip, { count: 1, resetAt: now + LOCKOUT_MS })
+    return { allowed: true, remaining: MAX_ATTEMPTS - 1, resetIn: LOCKOUT_MS }
+  }
+
+  if (record.count >= MAX_ATTEMPTS) {
+    return { allowed: false, remaining: 0, resetIn: record.resetAt - now }
+  }
+
+  record.count++
+  return { allowed: true, remaining: MAX_ATTEMPTS - record.count, resetIn: record.resetAt - now }
+}
+
+function resetRateLimit(ip: string) {
+  attempts.delete(ip)
+}
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get('x-forwarded-for') || 'unknown'
-  const now = Date.now()
+  try {
+    const ip = getClientIp(request)
+    const rateLimit = checkRateLimit(ip)
 
-  // Cek rate limit
-  const attempt = attempts.get(ip)
-  if (attempt && attempt.count >= MAX_ATTEMPTS) {
-    if (now - attempt.lastAttempt < LOCKOUT_DURATION) {
-      const remainingMin = Math.ceil((LOCKOUT_DURATION - (now - attempt.lastAttempt)) / 60000)
+    if (!rateLimit.allowed) {
+      const minutes = Math.ceil(rateLimit.resetIn / 60000)
       return NextResponse.json(
-        { success: false, message: `Terlalu banyak percobaan. Coba lagi dalam ${remainingMin} menit.` },
+        {
+          success: false,
+          message: `Terlalu banyak percobaan. Coba lagi dalam ${minutes} menit.`,
+          locked: true,
+        },
         { status: 429 }
       )
     }
-    // Reset jika lockout sudah lewat
-    attempts.delete(ip)
+
+    const { password } = await request.json()
+    const adminPassword = process.env.ADMIN_PASSWORD
+
+    if (!adminPassword) {
+      console.error('ADMIN_PASSWORD not configured')
+      return NextResponse.json(
+        { success: false, message: 'Server misconfigured' },
+        { status: 500 }
+      )
+    }
+
+    // Constant-time password verification
+    if (typeof password !== 'string' || !verifyPassword(password, adminPassword)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Password salah. ${rateLimit.remaining} percobaan tersisa.`,
+          remaining: rateLimit.remaining,
+        },
+        { status: 401 }
+      )
+    }
+
+    // Success - reset rate limit & generate token
+    resetRateLimit(ip)
+    const token = generateSessionToken()
+
+    return NextResponse.json({
+      success: true,
+      token,
+      expiresIn: 24 * 60 * 60 * 1000, // 24 jam
+    })
+  } catch (err: any) {
+    console.error('Auth error:', err)
+    return NextResponse.json(
+      { success: false, message: 'Server error' },
+      { status: 500 }
+    )
   }
-
-  const { password } = await request.json()
-  const adminPassword = process.env.ADMIN_PASSWORD
-
-  if (password === adminPassword) {
-    attempts.delete(ip) // Reset attempts jika berhasil
-    return NextResponse.json({ success: true })
-  }
-
-  // Increment attempts
-  const current = attempts.get(ip) || { count: 0, lastAttempt: 0 }
-  attempts.set(ip, {
-    count: current.count + 1,
-    lastAttempt: now,
-  })
-
-  return NextResponse.json(
-    { success: false, message: 'Password salah' },
-    { status: 401 }
-  )
 }

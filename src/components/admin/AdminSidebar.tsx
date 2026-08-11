@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Settings, Images, Film, Users, 
   Sparkles, LogOut, Heart, BookOpen, FolderOpen
 } from 'lucide-react'
+import { authClient } from '@/lib/auth-client'
 
 const menuGroups = [
   {
@@ -43,8 +44,7 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   const router = useRouter()
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_auth')
-    router.push('/admin/login')
+    authClient.logout()
   }
 
   return (

@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Lock, Heart, Sparkles, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Lock, Heart, Sparkles, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { authClient } from '@/lib/auth-client'
 import {
   isRequired, minLength, maxLength,
   ValidationErrors, hasErrors
@@ -22,20 +23,16 @@ export default function AdminLogin() {
   const validateLogin = (): boolean => {
     const newErrors: ValidationErrors = {}
 
-    // Password wajib diisi
     const requiredErr = isRequired(password, 'Password')
     if (requiredErr) {
       newErrors.password = requiredErr
     } else {
-      // Minimal 6 karakter
       const minErr = minLength(password, 6)
       if (minErr) newErrors.password = minErr
 
-      // Maksimal 100 karakter (anti-spam)
       const maxErr = maxLength(password, 100)
       if (maxErr) newErrors.password = maxErr
 
-      // Tidak boleh hanya spasi
       if (password.trim() === '') {
         newErrors.password = 'Password tidak boleh hanya spasi'
       }
@@ -47,14 +44,9 @@ export default function AdminLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Validasi client-side
-    if (!validateLogin()) {
-      return
-    }
+    if (!validateLogin()) return
 
     setLoading(true)
-
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
@@ -64,29 +56,22 @@ export default function AdminLogin() {
 
       const data = await res.json()
 
-      if (data.success) {
-        localStorage.setItem('admin_auth', 'true')
-        toast.success('Selamat datang! 🎉')
+      if (data.success && data.token) {
+        // Simpan token saja, BUKAN password
+        authClient.setToken(data.token)
+        setPassword('')
         setErrors({})
+        toast.success('Selamat datang! 🎉')
         router.push('/admin')
       } else {
-        // Server menolak password → tampilkan error di field password
-        setErrors({ password: data.message || 'Password salah. Silakan coba lagi.' })
+        setErrors({ password: data.message || 'Password salah' })
         setPassword('')
       }
     } catch (err) {
-      toast.error('Terjadi kesalahan koneksi. Silakan coba lagi.')
+      toast.error('Terjadi kesalahan koneksi')
       setErrors({ password: 'Gagal terhubung ke server' })
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handlePasswordChange = (value: string) => {
-    setPassword(value)
-    // Auto-clear error saat user mengetik
-    if (errors.password) {
-      setErrors({})
     }
   }
 
@@ -123,19 +108,16 @@ export default function AdminLogin() {
             <Input
               type={showPassword ? 'text' : 'password'}
               value={password}
-              onChange={(e) => handlePasswordChange(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                if (errors.password) setErrors({})
+              }}
               placeholder="Masukkan password admin"
               icon={<Lock size={18} />}
               error={errors.password}
               required
               autoComplete="current-password"
               disabled={loading}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  handleLogin(e)
-                }
-              }}
             />
 
             <button
@@ -154,7 +136,6 @@ export default function AdminLogin() {
               fullWidth
               size="lg"
               icon={<Lock size={18} />}
-              disabled={loading}
             >
               Masuk ke Dashboard
             </Button>
@@ -167,7 +148,7 @@ export default function AdminLogin() {
               <div className="w-8 h-px bg-[#C9A96E]/30"></div>
             </div>
             <p className="mt-3 text-xs text-[#6B5B5B]/50">
-              Protected area - Authorized personnel only
+              Protected area · Session expires in 24h
             </p>
           </div>
         </div>
