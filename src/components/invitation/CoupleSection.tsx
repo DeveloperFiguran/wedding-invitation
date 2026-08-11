@@ -51,15 +51,6 @@ export function CoupleSection({ settings }: CoupleSectionProps) {
           >
             Bismillahirrahmanirrahim
           </p>
-          <h2 className="font-display text-heading-xl mb-5" style={{ color: settings.text_color }}>
-            Mempelai
-          </h2>
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-12 h-px" style={{ backgroundColor: settings.primary_color }} />
-            <Heart size={18} fill={settings.accent_color} style={{ color: settings.accent_color }} />
-            <div className="w-12 h-px" style={{ backgroundColor: settings.primary_color }} />
-          </div>
-        </motion.div>
 
         {/* Opening text */}
         {settings.opening_text && (
@@ -73,6 +64,18 @@ export function CoupleSection({ settings }: CoupleSectionProps) {
             {settings.opening_text}
           </motion.p>
         )}
+          
+          {/* <h2 className="font-display text-heading-xl mb-5" style={{ color: settings.text_color }}>
+            Mempelai
+          </h2> */}
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-12 h-px" style={{ backgroundColor: settings.primary_color }} />
+            <Heart size={18} fill={settings.accent_color} style={{ color: settings.accent_color }} />
+            <div className="w-12 h-px" style={{ backgroundColor: settings.primary_color }} />
+          </div>
+        </motion.div>
+
+
 
         <div className="space-y-16">
           {/* ====== BRIDE ====== */}
