@@ -32,10 +32,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      {/* <head>
+      <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head> */}
+      </head>
       <body className="antialiased">
         <ErrorBoundary>{children}</ErrorBoundary>
         <Toaster 
