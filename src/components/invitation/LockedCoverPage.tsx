@@ -304,14 +304,17 @@ export function LockedCoverPage() {
             >
               {isUsingDefault ? 'Selamat Datang' : 'Undangan Digital'}
             </h3>
-            <p className="text-body-sm leading-relaxed" style={{ color: faintColor }}>
+            {/* <p className="text-body-sm leading-relaxed" style={{ color: faintColor }}>
               {isUsingDefault
                 ? 'Undangan ini belum dikonfigurasi. Silakan masuk ke admin panel untuk mengatur data pernikahan.'
                 : 'Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.'}
+            </p> */}
+            <p className="text-body-sm leading-relaxed" style={{ color: faintColor }}>
+              {'Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.'}
             </p>
 
             {/* Tombol ke admin (hanya muncul jika pakai default) */}
-            {isUsingDefault && (
+            {/* {isUsingDefault && (
               <motion.a
                 href="/admin"
                 className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:scale-105"
@@ -326,7 +329,7 @@ export function LockedCoverPage() {
                 <Lock size={14} />
                 Setup Undangan
               </motion.a>
-            )}
+            )} */}
           </motion.div>
         </div>
       </div>
