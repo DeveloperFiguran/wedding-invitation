@@ -12,6 +12,36 @@ function getBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
+// Truncate yang AMAN untuk emoji (tidak memotong surrogate pair)
+function truncateSafely(str: string, maxLength: number): string {
+  if (!str || str.length <= maxLength) return str
+
+  // Gunakan Intl.Segmenter jika tersedia (modern browsers/Node)
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    try {
+      const segmenter = new Intl.Segmenter('id', { granularity: 'grapheme' })
+      const segments = Array.from(segmenter.segment(str))
+      let result = ''
+      for (const seg of segments) {
+        if ((result + seg.segment).length > maxLength) break
+        result += seg.segment
+      }
+      return result
+    } catch {
+      // Fallback ke cara manual
+    }
+  }
+
+  // Fallback: slice tapi jangan potong surrogate pair (emoji)
+  let sliced = str.slice(0, maxLength)
+  const lastCharCode = sliced.charCodeAt(sliced.length - 1)
+  // Jika karakter terakhir adalah high surrogate (emoji), hapus
+  if (lastCharCode >= 0xD800 && lastCharCode <= 0xDBFF) {
+    sliced = sliced.slice(0, -1)
+  }
+  return sliced
+}
+
 async function fetchSettings() {
   try {
     const { data, error } = await supabase
@@ -20,9 +50,19 @@ async function fetchSettings() {
       .limit(1)
       .single()
 
-    if (error) return null
+    if (error) {
+      console.error('[metadata] Fetch settings error:', error.message)
+      return null
+    }
+
+    if (!data) {
+      console.warn('[metadata] Settings data is empty')
+      return null
+    }
+
     return data
-  } catch {
+  } catch (err: any) {
+    console.error('[metadata] Exception:', err.message)
     return null
   }
 }
@@ -46,10 +86,18 @@ export async function buildInvitationMetadata(
   const settings = await fetchSettings()
   const baseUrl = getBaseUrl()
 
+  // ====== FALLBACK jika settings tidak ada ======
   if (!settings) {
+    console.warn('[metadata] Using fallback - settings not found')
     return {
-      title: 'Undangan Pernikahan Digital',
+      title: 'Undangan Pernikahan Digital 💍',
       description: 'Anda diundang untuk merayakan pernikahan kami',
+      openGraph: {
+        title: 'Undangan Pernikahan Digital 💍',
+        description: 'Anda diundang untuk merayakan pernikahan kami',
+        locale: 'id_ID',
+        type: 'website',
+      },
     }
   }
 
@@ -62,28 +110,25 @@ export async function buildInvitationMetadata(
     hero_image_url,
     cover_background_url,
     wedding_hashtag,
-    quote,
     primary_color,
-    // Custom meta dari admin
     meta_title,
     meta_description,
     meta_image_url,
   } = settings
 
   // ====== TITLE ======
-  // Prioritas: custom meta_title > auto-generate
   const autoTitle = `Undangan Pernikahan ${bride_name} & ${groom_name} 💍`
-  const title = meta_title?.trim() || autoTitle
+  const rawTitle = meta_title?.trim() || autoTitle
+  const title = truncateSafely(sanitizeText(rawTitle), 60)
 
   // ====== DESCRIPTION ======
-  // Prioritas: custom meta_description > quote > auto-generate
   const dateStr = formatDate(wedding_date)
-  const autoDescription =`Kami mengundang Anda untuk merayakan pernikahan ${bride_fullname} & ${groom_fullname}${dateStr ? ` pada ${dateStr}` : ''
+  const autoDescription = `Kami mengundang Anda untuk merayakan pernikahan ${bride_fullname} & ${groom_fullname}${dateStr ? ` pada ${dateStr}` : ''
     }. Kehadiran Anda adalah kehormatan bagi kami.`
-  const description = meta_description?.trim() || autoDescription
+  const rawDescription = meta_description?.trim() || autoDescription
+  const description = truncateSafely(sanitizeText(rawDescription), 160)
 
   // ====== IMAGE ======
-  // Prioritas: custom meta_image_url > hero > cover
   const ogImage =
     sanitizeUrl(meta_image_url) ||
     sanitizeUrl(hero_image_url) ||
@@ -92,13 +137,10 @@ export async function buildInvitationMetadata(
 
   const url = code ? `${baseUrl}/u/${code}` : baseUrl
 
-  // ====== SANITASI untuk keamanan ======
-  const safeTitle = sanitizeText(title).slice(0, 60)
-  const safeDescription = sanitizeText(description).slice(0, 160)
-
-  const metadata: Metadata = {
-    title: safeTitle,
-    description: safeDescription,
+  // ====== BUILD METADATA ======
+  return {
+    title,
+    description,
     keywords: [
       'undangan pernikahan',
       'wedding invitation',
@@ -108,9 +150,7 @@ export async function buildInvitationMetadata(
     ].filter(Boolean),
     authors: [{ name: `${bride_name} & ${groom_name}` }],
     creator: `${bride_name} & ${groom_name}`,
-    alternates: {
-      canonical: url,
-    },
+    alternates: { canonical: url },
     icons: ogImage
       ? {
         icon: [{ url: ogImage, type: 'image/jpeg' }],
@@ -118,38 +158,25 @@ export async function buildInvitationMetadata(
       }
       : undefined,
     openGraph: {
-      title: safeTitle,
-      description: safeDescription,
+      title,
+      description,
       url,
       siteName: `The Wedding of ${bride_name} & ${groom_name}`,
       images: ogImage
-        ? [
-          {
-            url: ogImage,
-            width: 1200,
-            height: 630,
-            alt: `Pernikahan ${bride_name} & ${groom_name}`,
-            type: 'image/jpeg',
-          },
-        ]
+        ? [{ url: ogImage, width: 1200, height: 630, alt: title, type: 'image/jpeg' }]
         : undefined,
       locale: 'id_ID',
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: safeTitle,
-      description: safeDescription,
+      title,
+      description,
       images: ogImage ? [ogImage] : undefined,
     },
     themeColor: primary_color || '#B8935A',
-    robots: {
-      index: true,
-      follow: true,
-    },
+    robots: { index: true, follow: true },
   }
-
-  return metadata
 }
 
 export function buildAdminMetadata(pageTitle?: string): Metadata {
