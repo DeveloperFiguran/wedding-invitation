@@ -37,6 +37,9 @@ export interface WeddingSettings {
   background_color: string
   background_style: string
   font_preset: string
+  meta_title?: string
+  meta_description?: string
+  meta_image_url?: string
   enable_gallery: boolean
   enable_documentary: boolean
   enable_love_story: boolean

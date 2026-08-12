@@ -19,7 +19,7 @@ import {
   Save, Heart, Calendar, MessageSquare, Gift,
   Palette, Images, Music, ToggleRight, Users,
   MapPin, Clock, Instagram, Hash, Link as LinkIcon,
-  Type, Sparkles, AlertCircle
+  Type, Sparkles, AlertCircle, Share2
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -192,6 +192,22 @@ export default function AdminSettings() {
     if (settings.wedding_hashtag) {
       const tagErr = validateHashtag(settings.wedding_hashtag)
       if (tagErr) newErrors.wedding_hashtag = tagErr
+    }
+
+    // Meta Title - maksimal 60 karakter (rekomendasi SEO)
+    if (settings.meta_title && settings.meta_title.length > 60) {
+      newErrors.meta_title = 'Meta title maksimal 60 karakter agar tidak terpotong di Google'
+    }
+
+    // Meta Description - maksimal 160 karakter
+    if (settings.meta_description && settings.meta_description.length > 160) {
+      newErrors.meta_description = 'Meta description maksimal 160 karakter agar tidak terpotong'
+    }
+
+    // Meta Image URL - valid jika diisi
+    if (settings.meta_image_url) {
+      const metaImgErr = validateUrl(settings.meta_image_url, 'Meta Image URL')
+      if (metaImgErr) newErrors.meta_image_url = metaImgErr
     }
 
     setErrors(newErrors)
@@ -386,6 +402,117 @@ export default function AdminSettings() {
           currentStyle={settings.background_style || 'botanical'}
           onSelect={(styleId) => updateField('background_style', styleId)}
         />
+      </Card>
+
+      {/* ============================================
+          SEO & MEDIA SOSIAL
+      ============================================ */}
+      <Card
+        title="SEO & Media Sosial"
+        subtitle="Atur tampilan saat link dibagikan di WhatsApp, Instagram, dll"
+        icon={<Share2 size={20} />}
+      >
+        <div className="space-y-5">
+          {/* Info box */}
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 flex items-start gap-3">
+            <AlertCircle size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-700">
+              <strong>Tips:</strong> Kosongkan field untuk menggunakan nilai otomatis.
+              Title otomatis dari nama pengantin, description dari quote, image dari hero/cover.
+            </div>
+          </div>
+
+          {/* Meta Title */}
+          <div>
+            <Input
+              label="Meta Title (Judul SEO)"
+              value={settings.meta_title || ''}
+              onChange={(e) => updateField('meta_title', e.target.value)}
+              placeholder={`Undangan Pernikahan ${settings.bride_name} & ${settings.groom_name}`}
+              hint={`Kosongkan untuk otomatis. Maksimal 60 karakter. Saat ini: ${
+                (settings.meta_title || '').length
+              }/60`}
+              error={errors.meta_title}
+            />
+          </div>
+
+          {/* Meta Description */}
+          <div>
+            <Textarea
+              label="Meta Description (Deskripsi SEO)"
+              value={settings.meta_description || ''}
+              onChange={(e) => updateField('meta_description', e.target.value)}
+              placeholder="Kami mengundang Anda untuk merayakan pernikahan kami..."
+              rows={3}
+              hint={`Kosongkan untuk otomatis dari quote. Maksimal 160 karakter. Saat ini: ${
+                (settings.meta_description || '').length
+              }/160`}
+              error={errors.meta_description}
+            />
+          </div>
+
+          {/* Meta Image */}
+          <div>
+            <Input
+              label="Meta Image URL (OG Image & Icon)"
+              value={settings.meta_image_url || ''}
+              onChange={(e) => updateField('meta_image_url', e.target.value)}
+              placeholder="https://..."
+              icon={<LinkIcon size={16} />}
+              hint="Kosongkan untuk pakai Hero/Cover image. Copy URL dari halaman Media. Rekomendasi: 1200x630px."
+              error={errors.meta_image_url}
+            />
+            <ImagePreview url={settings.meta_image_url} />
+          </div>
+
+          {/* ====== LIVE PREVIEW ====== */}
+          <div className="mt-6">
+            <p className="text-xs font-semibold text-[#6B5B5B]/80 mb-3 uppercase tracking-wider">
+              Preview di WhatsApp / Media Sosial
+            </p>
+            <div className="bg-[#ECE5DD] rounded-2xl p-4 max-w-sm">
+              {/* Simulasi preview WhatsApp */}
+              <div className="bg-white rounded-xl overflow-hidden shadow-md">
+                {/* Image preview */}
+                <div className="relative aspect-[1200/630] bg-gray-200">
+                  {(settings.meta_image_url || settings.hero_image_url || settings.cover_background_url) ? (
+                    <SafeImage
+                      src={
+                        settings.meta_image_url ||
+                        settings.hero_image_url ||
+                        settings.cover_background_url ||
+                        ''
+                      }
+                      alt="Preview"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                      <Images size={32} />
+                    </div>
+                  )}
+                </div>
+                {/* Text preview */}
+                <div className="p-3">
+                  <p className="text-sm font-semibold text-gray-800 line-clamp-2">
+                    {settings.meta_title ||
+                      `Undangan Pernikahan ${settings.bride_name} & ${settings.groom_name} 💍`}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    {settings.meta_description ||
+                      `Kami mengundang Anda untuk merayakan pernikahan ${settings.bride_fullname} & ${settings.groom_fullname}.`}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-2 uppercase">
+                    {typeof window !== 'undefined'
+                      ? new URL(window.location.origin).hostname
+                      : 'undangan.namaanda.com'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </Card>
 
       {/* ============================================

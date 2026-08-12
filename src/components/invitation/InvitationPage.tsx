@@ -79,6 +79,11 @@ export function InvitationPage({ code }: { code: string }) {
       // Social - format specific
       instagram_username: sanitizeInstagramUsername(data.instagram_username || ''),
       wedding_hashtag: sanitizeHashtag(data.wedding_hashtag || ''),
+
+      // TAMBAHAN: Meta fields
+      meta_title: sanitizeText(data.meta_title || ''),
+      meta_description: sanitizeText(data.meta_description || ''),
+      meta_image_url: sanitizeUrl(data.meta_image_url),
     }
   }
 

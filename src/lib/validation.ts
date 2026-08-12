@@ -201,3 +201,4 @@ export function sanitizeHashtag(value: string): string {
   const sanitized = cleaned.replace(/[^a-zA-Z0-9_]/g, '').slice(0, 50)
   return sanitized ? `#${sanitized}` : ''
 }
+
