@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: WeddingSettings = {
   wedding_date: getDefaultWeddingDate(),
   akad_date: getDefaultWeddingDate(),
   akad_time: '08:00',
-  akad_location: 'Lokasi Akad',
+  akad_location: '',
   akad_maps: '',
   reception_date: getDefaultWeddingDate(),
   reception_time: '11:00',
