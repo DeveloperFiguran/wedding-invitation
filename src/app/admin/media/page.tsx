@@ -10,23 +10,32 @@ import { isValidImageUrl } from '@/lib/validation'
 import { authenticatedFetch } from '@/lib/auth-client'
 import {
   Upload, Copy, Check, Trash2, ExternalLink,
-  FolderOpen, Loader2, RefreshCw, Images as ImagesIcon,
-  ShieldCheck
+  FolderOpen, Loader2, RefreshCw, 
+  Images as ImagesIcon, Music, Play, Pause,
+  FileAudio, Image as ImageIcon
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { copyToClipboard } from '@/lib/utils'
 
-const BUCKET = 'wedding-images'
-const MAX_FILE_SIZE_MB = 5
-const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+const BUCKET = 'wedding-files'
+const MAX_FILE_SIZE_MB = 10
+const ALLOWED_IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+const ALLOWED_AUDIO_EXTS = ['mp3']
+const ALLOWED_EXTS = [...ALLOWED_IMAGE_EXTS, ...ALLOWED_AUDIO_EXTS]
 
-// Magic bytes signatures untuk validasi konten file
+// Magic bytes untuk validasi client-side
 const MAGIC_BYTES: Record<string, number[][]> = {
   jpg: [[0xFF, 0xD8, 0xFF]],
   jpeg: [[0xFF, 0xD8, 0xFF]],
   png: [[0x89, 0x50, 0x4E, 0x47]],
   gif: [[0x47, 0x49, 0x46, 0x38]],
   webp: [[0x52, 0x49, 0x46, 0x46]],
+  mp3: [
+    [0x49, 0x44, 0x33],
+    [0xFF, 0xFB],
+    [0xFF, 0xF3],
+    [0xFF, 0xF2],
+  ],
 }
 
 interface MediaFile {
@@ -34,7 +43,10 @@ interface MediaFile {
   id: string
   created_at: string
   url: string
+  fileType: 'image' | 'audio'
 }
+
+type FilterType = 'all' | 'image' | 'audio'
 
 export default function AdminMedia() {
   const [media, setMedia] = useState<MediaFile[]>([])
@@ -42,55 +54,59 @@ export default function AdminMedia() {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null)
+  const [filter, setFilter] = useState<FilterType>('all')
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null)
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; file: MediaFile | null }>({
     open: false,
     file: null,
   })
   const [deleting, setDeleting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     fetchMedia()
+    return () => {
+      // Cleanup audio saat unmount
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+    }
   }, [])
 
   /* ============================================
-     VALIDASI KEAMANAN FILE (client-side fast fail)
+     VALIDASI FILE (Client-side fast fail)
      ============================================ */
   async function validateFileSecurity(file: File): Promise<string | null> {
-    // 1. Cek tipe MIME
-    if (!file.type.startsWith('image/')) {
-      return 'File harus berupa gambar'
-    }
-
-    // 2. Cek ukuran
+    // 1. Cek ukuran
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
       return `Ukuran maksimal ${MAX_FILE_SIZE_MB}MB`
     }
 
-    // 3. Cek ekstensi
+    // 2. Cek ekstensi
     const fileExt = file.name.split('.').pop()?.toLowerCase() || ''
     if (!ALLOWED_EXTS.includes(fileExt)) {
       return `Ekstensi tidak diizinkan. Gunakan: ${ALLOWED_EXTS.join(', ')}`
     }
 
-    // 4. Cek magic bytes (anti file rename berbahaya)
+    // 3. Magic bytes check
     try {
       const buffer = await file.slice(0, 12).arrayBuffer()
       const bytes = new Uint8Array(buffer)
 
-      const isValidSignature = ALLOWED_EXTS.some((ext) => {
-        const signatures = MAGIC_BYTES[ext] || []
-        return signatures.some((sig) => sig.every((byte, i) => bytes[i] === byte))
-      })
+      const signatures = MAGIC_BYTES[fileExt] || []
+      const isValidSignature = signatures.some((sig) => 
+        sig.every((byte, i) => bytes[i] === byte)
+      )
 
       if (!isValidSignature) {
-        return 'Konten file tidak sesuai dengan ekstensinya (kemungkinan file berbahaya)'
+        return 'Konten file tidak sesuai dengan ekstensinya'
       }
     } catch (err) {
       return 'Gagal membaca file'
     }
 
-    // 5. Cek nama file (anti path traversal)
+    // 4. Path traversal check
     if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
       return 'Nama file mengandung karakter tidak valid'
     }
@@ -98,8 +114,13 @@ export default function AdminMedia() {
     return null
   }
 
+  function getFileType(filename: string): 'image' | 'audio' {
+    const ext = filename.split('.').pop()?.toLowerCase() || ''
+    return ALLOWED_AUDIO_EXTS.includes(ext) ? 'audio' : 'image'
+  }
+
   /* ============================================
-     Ambil semua gambar dari bucket (public read)
+     FETCH MEDIA
      ============================================ */
   async function fetchMedia() {
     setLoading(true)
@@ -124,9 +145,9 @@ export default function AdminMedia() {
             id: file.id || file.name,
             created_at: file.created_at || '',
             url: urlData.publicUrl,
+            fileType: getFileType(file.name),
           }
         })
-        .filter((file) => isValidImageUrl(file.url))
 
       setMedia(filesWithUrl)
     } catch (err: any) {
@@ -137,12 +158,12 @@ export default function AdminMedia() {
   }
 
   /* ============================================
-     Upload via API Route dengan token auth
+     UPLOAD
      ============================================ */
   async function uploadFiles(files: FileList | File[]) {
-    const fileArray = Array.from(files).filter((f) => f.type.startsWith('image/'))
+    const fileArray = Array.from(files)
     if (fileArray.length === 0) {
-      toast.error('Tidak ada gambar yang valid')
+      toast.error('Tidak ada file yang dipilih')
       return
     }
 
@@ -152,7 +173,7 @@ export default function AdminMedia() {
     const errors: string[] = []
 
     for (const file of fileArray) {
-      // Validasi keamanan di client (fast fail)
+      // Validasi client-side
       const securityError = await validateFileSecurity(file)
       if (securityError) {
         errors.push(`${file.name}: ${securityError}`)
@@ -164,7 +185,6 @@ export default function AdminMedia() {
         const formData = new FormData()
         formData.append('file', file)
 
-        // authenticatedFetch otomatis attach token & auto-logout jika expired
         const res = await authenticatedFetch('/api/admin/media', {
           method: 'POST',
           body: formData,
@@ -187,12 +207,12 @@ export default function AdminMedia() {
     setUploading(false)
 
     if (successCount > 0) {
-      toast.success(`${successCount} gambar berhasil diupload! 🎉`)
+      toast.success(`${successCount} file berhasil diupload! 🎉`)
       fetchMedia()
     }
     if (failCount > 0) {
       const errorMsg = errors.slice(0, 3).join('; ')
-      toast.error(`${failCount} gambar gagal: ${errorMsg}${errors.length > 3 ? '...' : ''}`)
+      toast.error(`${failCount} file gagal: ${errorMsg}${errors.length > 3 ? '...' : ''}`)
     }
   }
 
@@ -223,18 +243,39 @@ export default function AdminMedia() {
   }
 
   /* ============================================
-     Copy URL
+     AUDIO PLAYER
+     ============================================ */
+  const toggleAudio = (url: string) => {
+    if (playingAudio === url) {
+      // Pause
+      audioRef.current?.pause()
+      setPlayingAudio(null)
+    } else {
+      // Play
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+      const audio = new Audio(url)
+      audioRef.current = audio
+      audio.play()
+      setPlayingAudio(url)
+      
+      audio.onended = () => {
+        setPlayingAudio(null)
+      }
+    }
+  }
+
+  /* ============================================
+     COPY & DELETE
      ============================================ */
   const handleCopyUrl = async (url: string) => {
     await copyToClipboard(url)
     setCopiedUrl(url)
-    toast.success('URL berhasil disalin! Tinggal paste di input gambar.')
+    toast.success('URL berhasil disalin! Tinggal paste di input.')
     setTimeout(() => setCopiedUrl(null), 2000)
   }
 
-  /* ============================================
-     Delete via API Route dengan token auth
-     ============================================ */
   const handleDelete = async () => {
     if (!deleteDialog.file) return
 
@@ -251,7 +292,7 @@ export default function AdminMedia() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Gagal menghapus')
 
-      toast.success('Gambar berhasil dihapus')
+      toast.success('File berhasil dihapus')
       setDeleteDialog({ open: false, file: null })
       fetchMedia()
     } catch (err: any) {
@@ -269,6 +310,14 @@ export default function AdminMedia() {
       year: 'numeric',
     })
   }
+
+  // Filter media berdasarkan type
+  const filteredMedia = filter === 'all' 
+    ? media 
+    : media.filter((file) => file.fileType === filter)
+
+  const imageCount = media.filter((f) => f.fileType === 'image').length
+  const audioCount = media.filter((f) => f.fileType === 'audio').length
 
   return (
     <div className="space-y-6">
@@ -292,7 +341,7 @@ export default function AdminMedia() {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,audio/mpeg,audio/mp3"
           multiple
           onChange={handleFileSelect}
           className="hidden"
@@ -301,8 +350,7 @@ export default function AdminMedia() {
         {uploading ? (
           <div className="flex flex-col items-center gap-3">
             <Loader2 size={36} className="text-[#C9A96E] animate-spin" />
-            <p className="text-body-md font-medium text-[#6B5B5B]">Mengupload & memvalidasi gambar...</p>
-            <p className="text-caption text-[#6B5B5B]/50">File dikirim ke server untuk validasi keamanan</p>
+            <p className="text-body-md font-medium text-[#6B5B5B]">Mengupload & memvalidasi file...</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
@@ -310,57 +358,87 @@ export default function AdminMedia() {
               <Upload size={28} className="text-white" />
             </div>
             <p className="text-body-lg font-semibold text-[#3D342B]">
-              Klik atau drag & drop gambar di sini
+              Klik atau drag & drop file di sini
             </p>
             <p className="text-body-sm text-[#6B5B5B]/60">
-              Format: JPG, PNG, WEBP, GIF · Maks {MAX_FILE_SIZE_MB}MB per gambar
+              Gambar: JPG, PNG, WEBP, GIF · Musik: MP3 · Maks {MAX_FILE_SIZE_MB}MB
             </p>
-            <div className="mt-2 flex items-center gap-2 text-caption text-[#C9A96E]">
-              <ShieldCheck size={14} />
-              <span>Upload aman via server dengan token authentication</span>
-            </div>
           </div>
         )}
       </div>
 
-      {/* ====== TOOLBAR ====== */}
+      {/* ====== FILTER TABS ====== */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <FolderOpen size={18} className="text-[#C9A96E]" />
-          <h3 className="font-display text-lg text-[#3D342B]">Semua Gambar</h3>
+          <h3 className="font-display text-lg text-[#3D342B]">Semua File</h3>
           <span className="text-caption bg-[#C9A96E]/10 text-[#B8935A] px-2.5 py-0.5 rounded-full font-semibold">
             {media.length}
           </span>
         </div>
 
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={<RefreshCw size={15} />}
-          onClick={fetchMedia}
-          loading={loading}
-        >
-          Refresh
-        </Button>
+        {/* Filter buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+              filter === 'all'
+                ? 'bg-gradient-to-r from-[#C9A96E] to-[#DCAE96] text-white shadow-md'
+                : 'bg-white text-[#6B5B5B] border border-[#C9A96E]/20 hover:bg-[#C9A96E]/5'
+            }`}
+          >
+            Semua ({media.length})
+          </button>
+          <button
+            onClick={() => setFilter('image')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${
+              filter === 'image'
+                ? 'bg-gradient-to-r from-[#C9A96E] to-[#DCAE96] text-white shadow-md'
+                : 'bg-white text-[#6B5B5B] border border-[#C9A96E]/20 hover:bg-[#C9A96E]/5'
+            }`}
+          >
+            <ImageIcon size={14} />
+            Gambar ({imageCount})
+          </button>
+          <button
+            onClick={() => setFilter('audio')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${
+              filter === 'audio'
+                ? 'bg-gradient-to-r from-[#C9A96E] to-[#DCAE96] text-white shadow-md'
+                : 'bg-white text-[#6B5B5B] border border-[#C9A96E]/20 hover:bg-[#C9A96E]/5'
+            }`}
+          >
+            <Music size={14} />
+            Musik ({audioCount})
+          </button>
+        </div>
       </div>
 
-      {/* ====== GRID GAMBAR ====== */}
+      {/* ====== GRID FILES ====== */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="aspect-square rounded-2xl bg-[#C9A96E]/10 animate-pulse" />
           ))}
         </div>
-      ) : media.length === 0 ? (
+      ) : filteredMedia.length === 0 ? (
         <div className="text-center py-20 bg-white/70 backdrop-blur-sm rounded-3xl border border-[#C9A96E]/10">
-          <ImagesIcon size={48} className="mx-auto text-[#C9A96E]/30 mb-4" />
-          <p className="text-body-md text-[#6B5B5B]/60 mb-1">Belum ada gambar</p>
-          <p className="text-body-sm text-[#6B5B5B]/40">Upload gambar pertama Anda di area atas</p>
+          {filter === 'audio' ? (
+            <Music size={48} className="mx-auto text-[#C9A96E]/30 mb-4" />
+          ) : filter === 'image' ? (
+            <ImagesIcon size={48} className="mx-auto text-[#C9A96E]/30 mb-4" />
+          ) : (
+            <FolderOpen size={48} className="mx-auto text-[#C9A96E]/30 mb-4" />
+          )}
+          <p className="text-body-md text-[#6B5B5B]/60 mb-1">
+            {filter === 'all' ? 'Belum ada file' : `Belum ada ${filter === 'image' ? 'gambar' : 'musik'}`}
+          </p>
+          <p className="text-body-sm text-[#6B5B5B]/40">Upload file pertama Anda di area atas</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           <AnimatePresence>
-            {media.map((file, index) => (
+            {filteredMedia.map((file, index) => (
               <motion.div
                 key={file.id}
                 layout
@@ -371,29 +449,51 @@ export default function AdminMedia() {
                 className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-[#C9A96E]/10"
               >
                 {/* Preview */}
-                <div
-                  className="relative aspect-square overflow-hidden cursor-pointer"
-                  onClick={() => window.open(file.url, '_blank', 'noopener,noreferrer')}
-                >
-                  <SafeImage
-                    src={file.url}
-                    alt={file.name}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="p-1.5 bg-white/90 backdrop-blur-sm rounded-lg shadow">
-                      <ExternalLink size={13} className="text-[#6B5B5B]" />
-                    </span>
+                {file.fileType === 'image' ? (
+                  <div
+                    className="relative aspect-square overflow-hidden cursor-pointer"
+                    onClick={() => window.open(file.url, '_blank', 'noopener,noreferrer')}
+                  >
+                    <SafeImage
+                      src={file.url}
+                      alt={file.name}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                </div>
+                ) : (
+                  <div className="relative aspect-square bg-gradient-to-br from-[#C9A96E]/10 to-[#DCAE96]/20 flex items-center justify-center">
+                    <div className="text-center">
+                      <button
+                        onClick={() => toggleAudio(file.url)}
+                        className="w-16 h-16 rounded-full bg-gradient-to-br from-[#C9A96E] to-[#DCAE96] flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                      >
+                        {playingAudio === file.url ? (
+                          <Pause size={24} className="text-white" />
+                        ) : (
+                          <Play size={24} className="text-white ml-1" />
+                        )}
+                      </button>
+                      <p className="mt-3 text-caption text-[#6B5B5B]/60 font-medium">
+                        {playingAudio === file.url ? 'Sedang diputar...' : 'Klik untuk putar'}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Info & Actions */}
                 <div className="p-3">
-                  <p className="text-caption text-[#6B5B5B]/50 mb-2 truncate" title={file.name}>
-                    {formatDate(file.created_at)}
-                  </p>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    {file.fileType === 'image' ? (
+                      <ImageIcon size={12} className="text-[#C9A96E]" />
+                    ) : (
+                      <FileAudio size={12} className="text-[#C9A96E]" />
+                    )}
+                    <p className="text-caption text-[#6B5B5B]/50 truncate" title={file.name}>
+                      {formatDate(file.created_at)}
+                    </p>
+                  </div>
 
                   <div className="flex gap-1.5">
                     <button
@@ -420,7 +520,7 @@ export default function AdminMedia() {
                     <button
                       onClick={() => setDeleteDialog({ open: true, file })}
                       className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-                      title="Hapus gambar"
+                      title="Hapus file"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -436,17 +536,16 @@ export default function AdminMedia() {
       <div className="p-5 bg-gradient-to-r from-[#C9A96E]/10 to-[#DCAE96]/10 rounded-2xl border border-[#C9A96E]/20">
         <h4 className="font-display text-sm text-[#3D342B] mb-2">💡 Cara Menggunakan</h4>
         <ol className="text-body-sm text-[#6B5B5B]/80 space-y-1 list-decimal list-inside">
-          <li>Upload gambar ke area di atas (tervalidasi otomatis di server)</li>
-          <li>Klik tombol <strong>Copy URL</strong> pada gambar yang diinginkan</li>
-          <li>Paste URL tersebut ke input gambar di Pengaturan, Gallery, Documentary, atau Love Story</li>
+          <li>Upload gambar atau musik di area atas</li>
+          <li>Klik tombol <strong>Copy URL</strong> pada file yang diinginkan</li>
+          <li>
+            Paste URL di:
+            <ul className="ml-6 mt-1 list-disc space-y-0.5">
+              <li><strong>Gambar:</strong> Pengaturan (Cover, Hero, Foto), Gallery, Documentary, Love Story</li>
+              <li><strong>Musik:</strong> Pengaturan → URL Musik Background</li>
+            </ul>
+          </li>
         </ol>
-        <div className="mt-3 pt-3 border-t border-[#C9A96E]/20 flex items-start gap-2 text-caption text-[#6B5B5B]/60">
-          <ShieldCheck size={14} className="text-green-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <strong>Keamanan:</strong> File divalidasi magic bytes, ekstensi, ukuran, dan path traversal di server.
-            Upload & hapus dilindungi token authentication (session 24 jam).
-          </div>
-        </div>
       </div>
 
       {/* ====== DELETE CONFIRMATION ====== */}
@@ -454,8 +553,8 @@ export default function AdminMedia() {
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, file: null })}
         onConfirm={handleDelete}
-        title="Hapus Gambar?"
-        description="Gambar akan dihapus permanen dari penyimpanan. URL yang sudah dipakai tidak akan menampilkan gambar lagi."
+        title="Hapus File?"
+        description="File akan dihapus permanen dari penyimpanan. URL yang sudah dipakai tidak akan berfungsi lagi."
         confirmText="Ya, Hapus"
         cancelText="Batal"
         variant="danger"

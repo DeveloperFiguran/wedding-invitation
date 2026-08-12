@@ -27,6 +27,7 @@ import {
   validateInstagram, validateHashtag, validateDate,
   isValidImageUrl, ValidationErrors, hasErrors
 } from '@/lib/validation'
+import { localToISO, isoToLocal } from '@/lib/utils'
 
 /* ============================================
    HELPER: Preview gambar untuk URL input
@@ -591,8 +592,8 @@ export default function AdminSettings() {
             </p>
             <Input
               type="datetime-local"
-              value={settings.wedding_date ? settings.wedding_date.slice(0, 16) : ''}
-              onChange={(e) => updateField('wedding_date', new Date(e.target.value).toISOString())}
+              value={settings.wedding_date ? isoToLocal(settings.wedding_date) : ''}
+              onChange={(e) => updateField('wedding_date', localToISO(e.target.value))}
               icon={<Clock size={16} />}
               required
               error={errors.wedding_date}
@@ -609,8 +610,8 @@ export default function AdminSettings() {
               <Input
                 label="Tanggal"
                 type="date"
-                value={settings.akad_date ? settings.akad_date.slice(0, 10) : ''}
-                onChange={(e) => updateField('akad_date', e.target.value ? new Date(e.target.value).toISOString() : null)}
+                value={settings.akad_date ? isoToLocal(settings.akad_date).split('T')[0] : ''}
+                onChange={(e) => updateField('akad_date', e.target.value ? localToISO(e.target.value + 'T00:00') : null)}
                 error={errors.akad_date}
               />
               <Input
@@ -651,8 +652,8 @@ export default function AdminSettings() {
               <Input
                 label="Tanggal"
                 type="date"
-                value={settings.reception_date ? settings.reception_date.slice(0, 10) : ''}
-                onChange={(e) => updateField('reception_date', e.target.value ? new Date(e.target.value).toISOString() : null)}
+                value={settings.reception_date ? isoToLocal(settings.reception_date).split('T')[0] : ''}
+                onChange={(e) => updateField('reception_date', e.target.value ? localToISO(e.target.value + 'T00:00') : null)}
                 error={errors.reception_date}
               />
               <Input
@@ -847,9 +848,10 @@ export default function AdminSettings() {
             label="URL Musik Background (MP3)"
             value={settings.music_url || ''}
             onChange={(e) => updateField('music_url', e.target.value)}
-            placeholder="https://.../music.mp3"
+            placeholder="https://..."
             icon={<Music size={16} />}
             error={errors.music_url}
+            hint="💡 Upload MP3 di halaman Media, lalu copy URL-nya ke sini"
           />
 
           {/* Social */}

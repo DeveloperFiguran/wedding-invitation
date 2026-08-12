@@ -9,10 +9,11 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   ),
   // Template: child pages bisa override dengan generateMetadata
-  title: {
-    default: 'Undangan Pernikahan Digital',
-    template: '%s | Wedding Invitation',
-  },
+  // title: {
+  //   default: 'Undangan Pernikahan Digital',
+  //   template: '%s | Wedding Invitation',
+  // },
+  title : 'Undangan Pernikahan Digital',
   description: 'Anda diundang untuk merayakan pernikahan kami',
   applicationName: 'Wedding Invitation',
 }

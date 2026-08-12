@@ -16,7 +16,6 @@ import { WishesWall } from './WishesWall'
 import { LoveStoryTimeline } from './LoveStoryTimeline'
 import { Closing } from './Closing'
 import { MusicPlayer } from './MusicPlayer'
-import { NotFoundPage } from './NotFoundPage'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { FallingPetals } from './FallingPetals'
 import { ScrollProgress } from './ScrollProgress'
@@ -25,7 +24,6 @@ import { getFontVariables } from '@/lib/fonts'
 import {
   sanitizeText, sanitizeUrl, sanitizeInstagramUsername, sanitizeHashtag
 } from '@/lib/validation'
-import Image from 'next/image'
 
 export function InvitationPage({ code }: { code: string }) {
   const [settings, setSettings] = useState<WeddingSettings | null>(null)
@@ -43,12 +41,12 @@ export function InvitationPage({ code }: { code: string }) {
   }, [code])
 
   /* ============================================
-     HELPER: Sanitasi settings dari DB
+     SANITASI DATA
      ============================================ */
   function sanitizeSettings(data: any): WeddingSettings {
     return {
       ...data,
-      // Text fields - escape HTML
+      // Text fields
       quote: sanitizeText(data.quote || ''),
       opening_text: sanitizeText(data.opening_text || ''),
       closing_text: sanitizeText(data.closing_text || ''),
@@ -64,8 +62,10 @@ export function InvitationPage({ code }: { code: string }) {
       bank_name: sanitizeText(data.bank_name || ''),
       bank_account_name: sanitizeText(data.bank_account_name || ''),
       bank_account_number: sanitizeText(data.bank_account_number || ''),
+      meta_title: sanitizeText(data.meta_title || ''),
+      meta_description: sanitizeText(data.meta_description || ''),
 
-      // URL fields - whitelist protocol
+      // URL fields
       akad_maps: sanitizeUrl(data.akad_maps),
       reception_maps: sanitizeUrl(data.reception_maps),
       cover_background_url: sanitizeUrl(data.cover_background_url),
@@ -75,21 +75,14 @@ export function InvitationPage({ code }: { code: string }) {
       qris_url: sanitizeUrl(data.qris_url),
       music_url: sanitizeUrl(data.music_url),
       live_stream_url: sanitizeUrl(data.live_stream_url),
+      meta_image_url: sanitizeUrl(data.meta_image_url),
 
-      // Social - format specific
+      // Social
       instagram_username: sanitizeInstagramUsername(data.instagram_username || ''),
       wedding_hashtag: sanitizeHashtag(data.wedding_hashtag || ''),
-
-      // TAMBAHAN: Meta fields
-      meta_title: sanitizeText(data.meta_title || ''),
-      meta_description: sanitizeText(data.meta_description || ''),
-      meta_image_url: sanitizeUrl(data.meta_image_url),
     }
   }
 
-  /* ============================================
-     HELPER: Sanitasi guest data
-     ============================================ */
   function sanitizeGuest(data: any): Guest {
     return {
       ...data,
@@ -98,9 +91,6 @@ export function InvitationPage({ code }: { code: string }) {
     }
   }
 
-  /* ============================================
-     HELPER: Sanitasi gallery & documentary
-     ============================================ */
   function sanitizeImageItem(data: any): any {
     return {
       ...data,
@@ -110,9 +100,6 @@ export function InvitationPage({ code }: { code: string }) {
     }
   }
 
-  /* ============================================
-     HELPER: Sanitasi love story
-     ============================================ */
   function sanitizeStory(data: any): LoveStory {
     return {
       ...data,
@@ -122,9 +109,12 @@ export function InvitationPage({ code }: { code: string }) {
     }
   }
 
+  /* ============================================
+     FETCH DATA
+     ============================================ */
   async function fetchData() {
     try {
-      // Fetch guest by code
+      // Fetch guest
       const { data: guestData, error: guestError } = await supabase
         .from('guests')
         .select('*')
@@ -150,7 +140,7 @@ export function InvitationPage({ code }: { code: string }) {
         return
       }
 
-      // ====== SANITASI SEMUA DATA ======
+      // Sanitasi data utama
       const safeSettings = sanitizeSettings(settingsData)
       const safeGuest = sanitizeGuest(guestData)
 
@@ -175,7 +165,7 @@ export function InvitationPage({ code }: { code: string }) {
         storyData = (data || []).map(sanitizeStory)
       }
 
-      // Fetch wishes (USER INPUT - paling kritis untuk XSS!)
+      // Fetch wishes (conditional)
       let wishesData: Guest[] = []
       if (safeSettings.enable_wishes_wall) {
         const { data } = await supabase
@@ -195,23 +185,54 @@ export function InvitationPage({ code }: { code: string }) {
       setAllWishes(wishesData)
       setLoading(false)
     } catch (err) {
+      console.error('Fetch error:', err)
       setError(true)
       setLoading(false)
     }
   }
 
+  /* ============================================
+     LOADING STATE
+     ============================================ */
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-ivory">
+      <div className="min-h-screen flex items-center justify-center bg-[#FBF8F3]">
         <LoadingSpinner text="Memuat undangan..." />
       </div>
     )
   }
 
+  /* ============================================
+     ERROR FALLBACK (untuk edge case: network error, settings kosong)
+     Catatan: kode invalid sudah di-handle di server dengan notFound()
+     ============================================ */
   if (error || !settings || !guest) {
-    return <NotFoundPage />
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FBF8F3] via-[#F7E7CE]/40 to-[#DCAE96]/30 px-4">
+        <div className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-[#C9A96E]/10 p-8 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-[#C9A96E] to-[#DCAE96] rounded-full flex items-center justify-center shadow-lg shadow-[#C9A96E]/30">
+            <span className="text-white text-3xl">💌</span>
+          </div>
+          <h1 className="font-display text-2xl text-[#3D342B] mb-3">
+            Undangan Tidak Tersedia
+          </h1>
+          <p className="text-body-md text-[#6B5B5B]/70 mb-6 leading-relaxed">
+            Terjadi kesalahan saat memuat undangan. Silakan coba beberapa saat lagi.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#C9A96E] to-[#DCAE96] text-white rounded-2xl font-semibold hover:shadow-lg hover:shadow-[#C9A96E]/30 transition-all duration-300"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    )
   }
 
+  /* ============================================
+     RENDER UNDANGAN
+     ============================================ */
   return (
     <div
       style={{
@@ -219,6 +240,20 @@ export function InvitationPage({ code }: { code: string }) {
         ...getFontVariables(settings.font_preset),
       }}
     >
+
+      {/* ============================================
+          MUSIC PLAYER - LEVEL GLOBAL
+          Tidak unmount saat transisi CoverPage → konten
+          Musik tetap play tanpa restart
+      ============================================ */}
+      {settings.enable_music && settings.music_url && (
+        <MusicPlayer
+          musicUrl={settings.music_url}
+          primaryColor={settings.primary_color}
+          accentColor={settings.accent_color}
+        />
+      )}
+      
       <AnimatePresence mode="wait">
         {!isOpen ? (
           <CoverPage
@@ -235,16 +270,11 @@ export function InvitationPage({ code }: { code: string }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
           >
-            {/* Progress bar */}
             <ScrollProgress color={settings.primary_color} />
-
-            {/* Falling petals ambient effect */}
             <FallingPetals color={settings.accent_color} count={10} />
 
-            {/* Hero dengan countdown */}
             <HeroSection settings={settings} />
 
-            {/* Quote section */}
             {settings.quote && (
               <section className="py-16 px-6 text-center" style={{ backgroundColor: settings.background_color }}>
                 <motion.blockquote
@@ -257,15 +287,13 @@ export function InvitationPage({ code }: { code: string }) {
                   <span className="font-script text-4xl block mb-4" style={{ color: settings.primary_color }}>
                     ✦
                   </span>
-                  "{settings.quote}"
+                  &quot;{settings.quote}&quot;
                 </motion.blockquote>
               </section>
             )}
 
-            {/* Couple */}
             <CoupleSection settings={settings} />
 
-            {/* Love Story Timeline */}
             {settings.enable_love_story && loveStory.length > 0 && (
               <LoveStoryTimeline
                 stories={loveStory}
@@ -276,10 +304,8 @@ export function InvitationPage({ code }: { code: string }) {
               />
             )}
 
-            {/* Event Details */}
             <EventDetails settings={settings} />
 
-            {/* Gallery */}
             {settings.enable_gallery && gallery.length > 0 && (
               <div id="gallery">
                 <GallerySection
@@ -291,7 +317,6 @@ export function InvitationPage({ code }: { code: string }) {
               </div>
             )}
 
-            {/* Documentary */}
             {settings.enable_documentary && documentary.length > 0 && (
               <DocumentarySection
                 images={documentary}
@@ -301,17 +326,14 @@ export function InvitationPage({ code }: { code: string }) {
               />
             )}
 
-            {/* Wedding Gift */}
             <div id="gift">
               <WeddingGift settings={settings} />
             </div>
 
-            {/* RSVP */}
             <div id="rsvp">
               <RSVPForm guest={guest} settings={settings} />
             </div>
 
-            {/* Wishes Wall */}
             {settings.enable_wishes_wall && allWishes.length > 0 && (
               <WishesWall
                 wishes={allWishes}
@@ -321,18 +343,10 @@ export function InvitationPage({ code }: { code: string }) {
               />
             )}
 
-            {/* Closing */}
             <Closing settings={settings} />
 
-            {/* Music Player */}
-            {settings.enable_music && settings.music_url && (
-              <MusicPlayer musicUrl={settings.music_url} primaryColor={settings.primary_color} />
-            )}
-
-            {/* Bottom Navigation */}
             <SectionNav primaryColor={settings.primary_color} enableGallery={settings.enable_gallery} />
 
-            {/* Footer */}
             <footer
               className="py-12 pb-28 md:pb-12 text-center"
               style={{ backgroundColor: settings.background_color }}

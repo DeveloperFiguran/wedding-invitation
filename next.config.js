@@ -104,6 +104,16 @@ const nextConfig = {
       },
     ]
   },
+
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: '/u/:code',
+  //       destination: '/undangan/:code',
+  //     },
+  //   ]
+  // }
+
 }
 
 module.exports = nextConfig

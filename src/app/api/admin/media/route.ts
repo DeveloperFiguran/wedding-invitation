@@ -2,20 +2,42 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifySessionToken } from '@/lib/auth'
 
-const MAX_SIZE_MB = 5
-const ALLOWED_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif']
-const BUCKET = 'wedding-images'
+const BUCKET = 'wedding-files'
+const MAX_SIZE_MB = 10 // Naikkan untuk MP3 (biasanya 3-8MB)
+
+// File types yang diizinkan
+const ALLOWED_IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+const ALLOWED_AUDIO_EXTS = ['mp3']
+const ALLOWED_EXTS = [...ALLOWED_IMAGE_EXTS, ...ALLOWED_AUDIO_EXTS]
 
 // Magic bytes signatures
 const MAGIC_BYTES: Record<string, number[][]> = {
+  // Images
   jpg: [[0xFF, 0xD8, 0xFF]],
   jpeg: [[0xFF, 0xD8, 0xFF]],
   png: [[0x89, 0x50, 0x4E, 0x47]],
   gif: [[0x47, 0x49, 0x46, 0x38]],
-  webp: [[0x52, 0x49, 0x46, 0x46]],
+  webp: [[0x52, 0x49, 0x46, 0x46]], // RIFF header
+
+  // Audio - MP3
+  mp3: [
+    [0x49, 0x44, 0x33], // ID3 tag ("ID3")
+    [0xFF, 0xFB],        // MPEG Audio Layer 3
+    [0xFF, 0xF3],        // MPEG Audio Layer 3 (variant)
+    [0xFF, 0xF2],        // MPEG Audio Layer 3 (variant)
+  ],
 }
 
-// Verifikasi admin via header
+// MIME types untuk response
+const MIME_TYPES: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  mp3: 'audio/mpeg',
+}
+
 async function verifyAdmin(request: NextRequest): Promise<boolean> {
   const authHeader = request.headers.get('authorization')
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
@@ -23,32 +45,45 @@ async function verifyAdmin(request: NextRequest): Promise<boolean> {
   return result.valid
 }
 
-// Validasi file di server
 async function validateFile(file: File): Promise<string | null> {
-  if (!file.type.startsWith('image/')) return 'Harus berupa gambar'
-  if (file.size > MAX_SIZE_MB * 1024 * 1024) return `Maksimal ${MAX_SIZE_MB}MB`
+  // 1. Cek ukuran
+  if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+    return `Ukuran maksimal ${MAX_SIZE_MB}MB`
+  }
 
+  // 2. Cek ekstensi
   const ext = file.name.split('.').pop()?.toLowerCase() || ''
-  if (!ALLOWED_EXTS.includes(ext)) return `Ekstensi tidak diizinkan`
+  if (!ALLOWED_EXTS.includes(ext)) {
+    return `Ekstensi tidak diizinkan. Gunakan: ${ALLOWED_EXTS.join(', ')}`
+  }
 
-  // Path traversal check
+  // 3. Path traversal check
   if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
     return 'Nama file tidak valid'
   }
 
-  // Magic bytes check
+  // 4. Magic bytes check
   try {
     const buffer = await file.slice(0, 12).arrayBuffer()
     const bytes = new Uint8Array(buffer)
-    const isValid = ALLOWED_EXTS.some(e =>
-      (MAGIC_BYTES[e] || []).some(sig => sig.every((b, i) => bytes[i] === b))
+
+    const signatures = MAGIC_BYTES[ext] || []
+    const isValid = signatures.some(sig =>
+      sig.every((byte, i) => bytes[i] === byte)
     )
-    if (!isValid) return 'Konten file tidak sesuai ekstensi'
+
+    if (!isValid) {
+      return 'Konten file tidak sesuai dengan ekstensinya'
+    }
   } catch {
-    return 'Gagal baca file'
+    return 'Gagal membaca file'
   }
 
   return null
+}
+
+function getFileType(ext: string): 'image' | 'audio' {
+  return ALLOWED_AUDIO_EXTS.includes(ext) ? 'audio' : 'image'
 }
 
 // ====== POST: Upload ======
@@ -70,7 +105,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validationError }, { status: 400 })
     }
 
-    // Service role client (bypass RLS)
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -78,11 +112,16 @@ export async function POST(request: NextRequest) {
     )
 
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const fileType = getFileType(ext)
     const safeFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${ext}`
 
     const { error } = await supabaseAdmin.storage
       .from(BUCKET)
-      .upload(safeFileName, file, { cacheControl: '3600', upsert: false })
+      .upload(safeFileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: MIME_TYPES[ext] || 'application/octet-stream',
+      })
 
     if (error) {
       console.error('Upload error:', error)
@@ -94,7 +133,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       url: data.publicUrl,
-      filename: safeFileName
+      filename: safeFileName,
+      fileType,
     })
   } catch (err: any) {
     console.error('Server error:', err)
@@ -114,7 +154,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Filename required' }, { status: 400 })
     }
 
-    // Validasi nama file (anti path traversal)
     if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 })
     }

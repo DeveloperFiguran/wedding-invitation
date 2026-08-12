@@ -46,6 +46,7 @@ export interface WeddingSettings {
   enable_wishes_wall: boolean
   enable_music: boolean
   updated_at: string
+  event_timezone?: string
 }
 
 export interface Guest {

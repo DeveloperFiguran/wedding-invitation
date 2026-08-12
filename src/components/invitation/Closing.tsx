@@ -25,16 +25,16 @@ export function Closing({ settings }: ClosingProps) {
         />
         
         {settings.closing_text && (
-          <p className="font-elegant text-lg italic leading-relaxed mb-10" style={{ color: settings.text_color }}>
+          <p className="font-elegant text-lg italic leading-relaxed mb-4" style={{ color: settings.text_color }}>
             {settings.closing_text}
           </p>
         )}
 
         <div>
-          <p className="text-sm" style={{ color: settings.text_color, opacity: 0.7 }}>
+          <p className="text-base" style={{ color: settings.text_color, opacity: 0.8 }}>
             Wassalamualaikum Wr. Wb.
           </p>
-          <p className="text-sm mt-1" style={{ color: settings.text_color, opacity: 0.7 }}>
+          <p className="text-base mt-1" style={{ color: settings.text_color, opacity: 0.8 }}>
             Kami yang berbahagia,
           </p>
           <p className="font-script text-4xl mt-6" style={{ color: settings.primary_color }}>
