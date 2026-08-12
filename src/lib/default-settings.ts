@@ -23,13 +23,13 @@ export const DEFAULT_SETTINGS: WeddingSettings = {
   wedding_date: getDefaultWeddingDate(),
   akad_date: getDefaultWeddingDate(),
   akad_time: '08:00',
-  akad_location: 'Lokasi Akad',
+  akad_location: '',
   akad_maps: '',
   reception_date: getDefaultWeddingDate(),
   reception_time: '11:00',
-  reception_location: 'Lokasi Resepsi',
+  reception_location: '',
   reception_maps: '',
-  dresscode: 'Formal',
+  dresscode: '',
 
   // ====== Konten Teks ======
   quote: 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu istri-istri dari jenismu sendiri, supaya kamu cenderung dan merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.',
@@ -141,7 +141,7 @@ export function createDefaultGuest() {
   return {
     id: 'default-guest',
     name: 'Tamu Undangan',
-    code: '',
+    code: 'ABCDE',
     rsvp_status: null,
     rsvp_count: 0,
     wish: '',
