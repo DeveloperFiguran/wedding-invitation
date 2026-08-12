@@ -76,7 +76,7 @@ export function parseDateForCountdown(dateStr: string): Date | null {
 }
 
 /**
- * Format tanggal dengan timezone spesifik (untuk acara)
+ * Format tanggal dengan timezone acara
  */
 export function formatDateWithTimezone(
   isoString: string,
@@ -85,23 +85,28 @@ export function formatDateWithTimezone(
 ): string {
   if (!isoString) return ''
 
-  const date = new Date(isoString)
-  if (isNaN(date.getTime())) return ''
+  try {
+    const date = new Date(isoString)
+    if (isNaN(date.getTime())) return ''
 
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    timeZone: timezone,
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    ...options,
+    const defaultOptions: Intl.DateTimeFormatOptions = {
+      timeZone: timezone,
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      ...options,
+    }
+
+    return date.toLocaleDateString('id-ID', defaultOptions)
+  } catch (err) {
+    console.error('Format date error:', err)
+    return ''
   }
-
-  return date.toLocaleDateString('id-ID', defaultOptions)
 }
 
 /**
- * Format jam dengan timezone spesifik
+ * Format jam dengan timezone acara
  */
 export function formatTimeWithTimezone(
   isoString: string,
@@ -109,12 +114,28 @@ export function formatTimeWithTimezone(
 ): string {
   if (!isoString) return ''
 
-  const date = new Date(isoString)
-  if (isNaN(date.getTime())) return ''
+  try {
+    const date = new Date(isoString)
+    if (isNaN(date.getTime())) return ''
 
-  return date.toLocaleTimeString('id-ID', {
-    timeZone: timezone,
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+    return date.toLocaleTimeString('id-ID', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch (err) {
+    console.error('Format time error:', err)
+    return ''
+  }
 }
+
+/**
+ * List timezone yang tersedia untuk dropdown
+ */
+export const TIMEZONE_OPTIONS = [
+  { value: 'Asia/Jakarta', label: 'WIB - Jakarta (UTC+7)' },
+  { value: 'Asia/Makassar', label: 'WITA - Makassar (UTC+8)' },
+  { value: 'Asia/Jayapura', label: 'WIT - Jayapura (UTC+9)' },
+  { value: 'Asia/Singapore', label: 'Singapore (UTC+8)' },
+  { value: 'Asia/Kuala_Lumpur', label: 'Malaysia (UTC+8)' },
+]

@@ -4,17 +4,20 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { WeddingSettings } from '@/types/database'
-import { Lock, Sparkles } from 'lucide-react'
+import { Lock, Sparkles, Music } from 'lucide-react'
 import Image from 'next/image'
 import { ElegantBackground } from './ElegantBackground'
 import { hasValue } from '@/lib/utils'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { getFontVariables } from '@/lib/fonts'
+import { DEFAULT_SETTINGS, mergeWithDefaults } from '@/lib/default-settings'
+import { MusicPlayer } from './MusicPlayer'
 
 export function LockedCoverPage() {
   const [settings, setSettings] = useState<WeddingSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [isUsingDefault, setIsUsingDefault] = useState(false)
 
   useEffect(() => {
     fetchSettings()
@@ -27,10 +30,22 @@ export function LockedCoverPage() {
         .select('*')
         .limit(1)
         .single()
-      if (error) throw error
-      setSettings(data)
+
+      if (error || !data) {
+        // Database kosong - gunakan default settings
+        console.warn('Settings tidak ditemukan, menggunakan default')
+        setSettings(DEFAULT_SETTINGS)
+        setIsUsingDefault(true)
+      } else {
+        // Merge dengan default untuk field yang kosong
+        setSettings(mergeWithDefaults(data))
+        setIsUsingDefault(false)
+      }
     } catch (err) {
       console.error('Gagal memuat settings:', err)
+      // Fallback ke default jika terjadi error
+      setSettings(DEFAULT_SETTINGS)
+      setIsUsingDefault(true)
     } finally {
       setLoading(false)
     }
@@ -39,25 +54,15 @@ export function LockedCoverPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen mobile-full flex items-center justify-center bg-ivory">
+      <div className="min-h-screen mobile-full flex items-center justify-center bg-[#FBF8F3]">
         <LoadingSpinner text="Memuat..." />
       </div>
     )
   }
 
-  // Error state - settings belum tersedia
+  // Settings tidak mungkin null karena ada fallback default
   if (!settings) {
-    return (
-      <div className="min-h-screen mobile-full flex items-center justify-center bg-ivory px-6">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-soft-gold/10 flex items-center justify-center">
-            <Lock className="text-soft-gold" size={28} />
-          </div>
-          <h1 className="font-display text-2xl text-warm-gray mb-2">Undangan Digital</h1>
-          <p className="text-body-sm text-warm-gray/60">Halaman sedang disiapkan.</p>
-        </div>
-      </div>
-    )
+    return null
   }
 
   // ====== MODE WARNA ADAPTIF ======
@@ -68,7 +73,19 @@ export function LockedCoverPage() {
   const faintColor = isDark ? 'rgba(255,255,255,0.6)' : `${settings.text_color}99`
 
   return (
-    <div className="relative min-h-screen mobile-full overflow-hidden" style={getFontVariables(settings.font_preset)}>
+    <div
+      className="relative min-h-screen mobile-full overflow-hidden"
+      style={getFontVariables(settings.font_preset)}
+    >
+      {/* ====== MUSIC PLAYER (Global) ====== */}
+      {settings.enable_music && settings.music_url && (
+        <MusicPlayer
+          musicUrl={settings.music_url}
+          primaryColor={settings.primary_color}
+          accentColor={settings.accent_color}
+        />
+      )}
+
       {/* ====== BACKGROUND ====== */}
       <div className="absolute inset-0">
         {hasCoverImage ? (
@@ -79,7 +96,9 @@ export function LockedCoverPage() {
                 alt="Wedding Cover"
                 fill
                 priority
-                className={`object-cover transition-opacity duration-1000 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`object-cover transition-opacity duration-1000 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
                 onLoad={() => setImageLoaded(true)}
               />
             </div>
@@ -168,7 +187,11 @@ export function LockedCoverPage() {
             >
               <div
                 className="w-14 h-px"
-                style={{ background: `linear-gradient(90deg, transparent, ${isDark ? 'rgba(255,255,255,0.6)' : settings.primary_color})` }}
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${
+                    isDark ? 'rgba(255,255,255,0.6)' : settings.primary_color
+                  })`,
+                }}
               />
               <Sparkles
                 className="mx-3 animate-pulse-soft"
@@ -177,7 +200,11 @@ export function LockedCoverPage() {
               />
               <div
                 className="w-14 h-px"
-                style={{ background: `linear-gradient(270deg, transparent, ${isDark ? 'rgba(255,255,255,0.6)' : settings.primary_color})` }}
+                style={{
+                  background: `linear-gradient(270deg, transparent, ${
+                    isDark ? 'rgba(255,255,255,0.6)' : settings.primary_color
+                  })`,
+                }}
               />
             </motion.div>
 
@@ -199,7 +226,10 @@ export function LockedCoverPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 1.8, duration: 1 }}
           >
-            <p className="text-body-md font-light tracking-[0.2em] uppercase" style={{ color: subtextColor }}>
+            <p
+              className="text-body-md font-light tracking-[0.2em] uppercase"
+              style={{ color: subtextColor }}
+            >
               {new Date(settings.wedding_date).toLocaleDateString('id-ID', {
                 day: 'numeric',
                 month: 'long',
@@ -214,7 +244,7 @@ export function LockedCoverPage() {
           </motion.div>
         </div>
 
-        {/* ====== Bottom - Notice Card (TANPA tombol buka, TANPA guest card) ====== */}
+        {/* ====== Bottom - Notice Card ====== */}
         <div className="w-full max-w-sm pb-2">
           <motion.div
             className={`rounded-3xl p-6 relative overflow-hidden ${
@@ -232,14 +262,28 @@ export function LockedCoverPage() {
             {/* Border gradient atas */}
             <div
               className="absolute top-0 left-0 right-0 h-0.5"
-              style={{ background: `linear-gradient(90deg, transparent, ${settings.accent_color}, transparent)` }}
+              style={{
+                background: `linear-gradient(90deg, transparent, ${settings.accent_color}, transparent)`,
+              }}
             />
 
             {/* Corner accents */}
-            <div className="absolute top-3 left-3 w-4 h-4 border-t border-l" style={{ borderColor: `${settings.accent_color}60` }} />
-            <div className="absolute top-3 right-3 w-4 h-4 border-t border-r" style={{ borderColor: `${settings.accent_color}60` }} />
-            <div className="absolute bottom-3 left-3 w-4 h-4 border-b border-l" style={{ borderColor: `${settings.accent_color}60` }} />
-            <div className="absolute bottom-3 right-3 w-4 h-4 border-b border-r" style={{ borderColor: `${settings.accent_color}60` }} />
+            <div
+              className="absolute top-3 left-3 w-4 h-4 border-t border-l"
+              style={{ borderColor: `${settings.accent_color}60` }}
+            />
+            <div
+              className="absolute top-3 right-3 w-4 h-4 border-t border-r"
+              style={{ borderColor: `${settings.accent_color}60` }}
+            />
+            <div
+              className="absolute bottom-3 left-3 w-4 h-4 border-b border-l"
+              style={{ borderColor: `${settings.accent_color}60` }}
+            />
+            <div
+              className="absolute bottom-3 right-3 w-4 h-4 border-b border-r"
+              style={{ borderColor: `${settings.accent_color}60` }}
+            />
 
             {/* Content - Pesan privat */}
             <div className="flex justify-center mb-3">
@@ -247,18 +291,42 @@ export function LockedCoverPage() {
                 className="w-12 h-12 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: `${settings.primary_color}20` }}
               >
-                <Lock size={22} style={{ color: settings.primary_color }} />
+                {isUsingDefault ? (
+                  <Music size={22} style={{ color: settings.primary_color }} />
+                ) : (
+                  <Lock size={22} style={{ color: settings.primary_color }} />
+                )}
               </div>
             </div>
             <h3
               className="font-elegant text-xl md:text-2xl font-semibold leading-tight mb-2"
               style={{ color: isDark ? '#FFFFFF' : settings.text_color }}
             >
-              Undangan Digital
+              {isUsingDefault ? 'Selamat Datang' : 'Undangan Digital'}
             </h3>
             <p className="text-body-sm leading-relaxed" style={{ color: faintColor }}>
-              Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.
+              {isUsingDefault
+                ? 'Undangan ini belum dikonfigurasi. Silakan masuk ke admin panel untuk mengatur data pernikahan.'
+                : 'Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.'}
             </p>
+
+            {/* Tombol ke admin (hanya muncul jika pakai default) */}
+            {isUsingDefault && (
+              <motion.a
+                href="/admin"
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:scale-105"
+                style={{
+                  backgroundColor: settings.primary_color,
+                  color: '#FFFFFF',
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2.5 }}
+              >
+                <Lock size={14} />
+                Setup Undangan
+              </motion.a>
+            )}
           </motion.div>
         </div>
       </div>

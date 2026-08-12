@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { WeddingSettings, Guest, GalleryImage, DocumentaryImage, LoveStory } from '@/types/database'
+import { DEFAULT_SETTINGS, mergeWithDefaults } from '@/lib/default-settings'
 import { CoverPage } from './CoverPage'
 import { HeroSection } from './HeroSection'
 import { CoupleSection } from './CoupleSection'
@@ -41,45 +42,48 @@ export function InvitationPage({ code }: { code: string }) {
   }, [code])
 
   /* ============================================
-     SANITASI DATA
+     SANITASI (dengan fallback default)
      ============================================ */
   function sanitizeSettings(data: any): WeddingSettings {
+    // Merge dengan default untuk field yang kosong
+    const merged = mergeWithDefaults(data)
+    
     return {
-      ...data,
+      ...merged,
       // Text fields
-      quote: sanitizeText(data.quote || ''),
-      opening_text: sanitizeText(data.opening_text || ''),
-      closing_text: sanitizeText(data.closing_text || ''),
-      dresscode: sanitizeText(data.dresscode || ''),
-      akad_location: sanitizeText(data.akad_location || ''),
-      reception_location: sanitizeText(data.reception_location || ''),
-      bride_parents: sanitizeText(data.bride_parents || ''),
-      groom_parents: sanitizeText(data.groom_parents || ''),
-      bride_fullname: sanitizeText(data.bride_fullname || ''),
-      groom_fullname: sanitizeText(data.groom_fullname || ''),
-      bride_name: sanitizeText(data.bride_name || ''),
-      groom_name: sanitizeText(data.groom_name || ''),
-      bank_name: sanitizeText(data.bank_name || ''),
-      bank_account_name: sanitizeText(data.bank_account_name || ''),
-      bank_account_number: sanitizeText(data.bank_account_number || ''),
-      meta_title: sanitizeText(data.meta_title || ''),
-      meta_description: sanitizeText(data.meta_description || ''),
+      quote: sanitizeText(merged.quote || ''),
+      opening_text: sanitizeText(merged.opening_text || ''),
+      closing_text: sanitizeText(merged.closing_text || ''),
+      dresscode: sanitizeText(merged.dresscode || ''),
+      akad_location: sanitizeText(merged.akad_location || ''),
+      reception_location: sanitizeText(merged.reception_location || ''),
+      bride_parents: sanitizeText(merged.bride_parents || ''),
+      groom_parents: sanitizeText(merged.groom_parents || ''),
+      bride_fullname: sanitizeText(merged.bride_fullname || ''),
+      groom_fullname: sanitizeText(merged.groom_fullname || ''),
+      bride_name: sanitizeText(merged.bride_name || ''),
+      groom_name: sanitizeText(merged.groom_name || ''),
+      bank_name: sanitizeText(merged.bank_name || ''),
+      bank_account_name: sanitizeText(merged.bank_account_name || ''),
+      bank_account_number: sanitizeText(merged.bank_account_number || ''),
+      meta_title: sanitizeText(merged.meta_title || ''),
+      meta_description: sanitizeText(merged.meta_description || ''),
 
       // URL fields
-      akad_maps: sanitizeUrl(data.akad_maps),
-      reception_maps: sanitizeUrl(data.reception_maps),
-      cover_background_url: sanitizeUrl(data.cover_background_url),
-      hero_image_url: sanitizeUrl(data.hero_image_url),
-      bride_photo_url: sanitizeUrl(data.bride_photo_url),
-      groom_photo_url: sanitizeUrl(data.groom_photo_url),
-      qris_url: sanitizeUrl(data.qris_url),
-      music_url: sanitizeUrl(data.music_url),
-      live_stream_url: sanitizeUrl(data.live_stream_url),
-      meta_image_url: sanitizeUrl(data.meta_image_url),
+      akad_maps: sanitizeUrl(merged.akad_maps),
+      reception_maps: sanitizeUrl(merged.reception_maps),
+      cover_background_url: sanitizeUrl(merged.cover_background_url),
+      hero_image_url: sanitizeUrl(merged.hero_image_url),
+      bride_photo_url: sanitizeUrl(merged.bride_photo_url),
+      groom_photo_url: sanitizeUrl(merged.groom_photo_url),
+      qris_url: sanitizeUrl(merged.qris_url),
+      music_url: sanitizeUrl(merged.music_url),
+      live_stream_url: sanitizeUrl(merged.live_stream_url),
+      meta_image_url: sanitizeUrl(merged.meta_image_url),
 
       // Social
-      instagram_username: sanitizeInstagramUsername(data.instagram_username || ''),
-      wedding_hashtag: sanitizeHashtag(data.wedding_hashtag || ''),
+      instagram_username: sanitizeInstagramUsername(merged.instagram_username || ''),
+      wedding_hashtag: sanitizeHashtag(merged.wedding_hashtag || ''),
     }
   }
 
@@ -110,11 +114,11 @@ export function InvitationPage({ code }: { code: string }) {
   }
 
   /* ============================================
-     FETCH DATA
+     FETCH DATA (dengan fallback default)
      ============================================ */
   async function fetchData() {
     try {
-      // Fetch guest
+      // Fetch guest - tetap required
       const { data: guestData, error: guestError } = await supabase
         .from('guests')
         .select('*')
@@ -127,54 +131,72 @@ export function InvitationPage({ code }: { code: string }) {
         return
       }
 
-      // Fetch settings
-      const { data: settingsData, error: settingsError } = await supabase
+      // Fetch settings - gunakan default jika tidak ada
+      let settingsData: any = null
+      const { data: dbSettings, error: settingsError } = await supabase
         .from('wedding_settings')
         .select('*')
         .limit(1)
         .single()
 
-      if (settingsError || !settingsData) {
-        setError(true)
-        setLoading(false)
-        return
+      if (!settingsError && dbSettings) {
+        settingsData = dbSettings
+      } else {
+        console.warn('Settings tidak ditemukan, menggunakan default')
+        settingsData = null
       }
 
-      // Sanitasi data utama
+      // Sanitasi dengan fallback default
       const safeSettings = sanitizeSettings(settingsData)
       const safeGuest = sanitizeGuest(guestData)
 
       // Fetch gallery (conditional)
       let galleryData: GalleryImage[] = []
       if (safeSettings.enable_gallery) {
-        const { data } = await supabase.from('gallery').select('*').order('sort_order')
-        galleryData = (data || []).map(sanitizeImageItem)
+        try {
+          const { data } = await supabase.from('gallery').select('*').order('sort_order')
+          galleryData = (data || []).map(sanitizeImageItem)
+        } catch (err) {
+          console.warn('Gallery fetch failed:', err)
+        }
       }
 
       // Fetch documentary (conditional)
       let documentaryData: DocumentaryImage[] = []
       if (safeSettings.enable_documentary) {
-        const { data } = await supabase.from('documentary').select('*').order('sort_order')
-        documentaryData = (data || []).map(sanitizeImageItem)
+        try {
+          const { data } = await supabase.from('documentary').select('*').order('sort_order')
+          documentaryData = (data || []).map(sanitizeImageItem)
+        } catch (err) {
+          console.warn('Documentary fetch failed:', err)
+        }
       }
 
       // Fetch love story (conditional)
       let storyData: LoveStory[] = []
       if (safeSettings.enable_love_story) {
-        const { data } = await supabase.from('love_story').select('*').order('sort_order')
-        storyData = (data || []).map(sanitizeStory)
+        try {
+          const { data } = await supabase.from('love_story').select('*').order('sort_order')
+          storyData = (data || []).map(sanitizeStory)
+        } catch (err) {
+          console.warn('Love story fetch failed:', err)
+        }
       }
 
       // Fetch wishes (conditional)
       let wishesData: Guest[] = []
       if (safeSettings.enable_wishes_wall) {
-        const { data } = await supabase
-          .from('guests')
-          .select('*')
-          .not('wish', 'is', null)
-          .order('created_at', { ascending: false })
-          .limit(50)
-        wishesData = (data || []).map(sanitizeGuest)
+        try {
+          const { data } = await supabase
+            .from('guests')
+            .select('*')
+            .not('wish', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(50)
+          wishesData = (data || []).map(sanitizeGuest)
+        } catch (err) {
+          console.warn('Wishes fetch failed:', err)
+        }
       }
 
       setSettings(safeSettings)
@@ -203,10 +225,10 @@ export function InvitationPage({ code }: { code: string }) {
   }
 
   /* ============================================
-     ERROR FALLBACK (untuk edge case: network error, settings kosong)
-     Catatan: kode invalid sudah di-handle di server dengan notFound()
+     ERROR FALLBACK (hanya untuk guest tidak ada)
+     Settings sudah punya default, jadi tidak error
      ============================================ */
-  if (error || !settings || !guest) {
+  if (error || !guest) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FBF8F3] via-[#F7E7CE]/40 to-[#DCAE96]/30 px-4">
         <div className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-[#C9A96E]/10 p-8 text-center">
@@ -230,6 +252,11 @@ export function InvitationPage({ code }: { code: string }) {
     )
   }
 
+  // Settings tidak mungkin null karena ada fallback default
+  if (!settings) {
+    return null
+  }
+
   /* ============================================
      RENDER UNDANGAN
      ============================================ */
@@ -240,12 +267,7 @@ export function InvitationPage({ code }: { code: string }) {
         ...getFontVariables(settings.font_preset),
       }}
     >
-
-      {/* ============================================
-          MUSIC PLAYER - LEVEL GLOBAL
-          Tidak unmount saat transisi CoverPage → konten
-          Musik tetap play tanpa restart
-      ============================================ */}
+      {/* Music Player - Level Global */}
       {settings.enable_music && settings.music_url && (
         <MusicPlayer
           musicUrl={settings.music_url}
@@ -253,7 +275,7 @@ export function InvitationPage({ code }: { code: string }) {
           accentColor={settings.accent_color}
         />
       )}
-      
+
       <AnimatePresence mode="wait">
         {!isOpen ? (
           <CoverPage

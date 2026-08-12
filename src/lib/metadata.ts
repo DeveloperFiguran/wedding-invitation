@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import type { Metadata } from 'next'
 import { sanitizeText, sanitizeUrl } from '@/lib/validation'
+import { DEFAULT_SETTINGS, mergeWithDefaults } from '@/lib/default-settings'
 
 function getBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
@@ -12,36 +13,6 @@ function getBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
-// Truncate yang AMAN untuk emoji (tidak memotong surrogate pair)
-function truncateSafely(str: string, maxLength: number): string {
-  if (!str || str.length <= maxLength) return str
-
-  // Gunakan Intl.Segmenter jika tersedia (modern browsers/Node)
-  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
-    try {
-      const segmenter = new Intl.Segmenter('id', { granularity: 'grapheme' })
-      const segments = Array.from(segmenter.segment(str))
-      let result = ''
-      for (const seg of segments) {
-        if ((result + seg.segment).length > maxLength) break
-        result += seg.segment
-      }
-      return result
-    } catch {
-      // Fallback ke cara manual
-    }
-  }
-
-  // Fallback: slice tapi jangan potong surrogate pair (emoji)
-  let sliced = str.slice(0, maxLength)
-  const lastCharCode = sliced.charCodeAt(sliced.length - 1)
-  // Jika karakter terakhir adalah high surrogate (emoji), hapus
-  if (lastCharCode >= 0xD800 && lastCharCode <= 0xDBFF) {
-    sliced = sliced.slice(0, -1)
-  }
-  return sliced
-}
-
 async function fetchSettings() {
   try {
     const { data, error } = await supabase
@@ -50,20 +21,17 @@ async function fetchSettings() {
       .limit(1)
       .single()
 
-    if (error) {
-      console.error('[metadata] Fetch settings error:', error.message)
-      return null
+    // Jika error atau data kosong, gunakan default
+    if (error || !data) {
+      console.warn('[metadata] Using default settings')
+      return DEFAULT_SETTINGS
     }
 
-    if (!data) {
-      console.warn('[metadata] Settings data is empty')
-      return null
-    }
-
-    return data
+    // Merge dengan default untuk field yang kosong
+    return mergeWithDefaults(data)
   } catch (err: any) {
     console.error('[metadata] Exception:', err.message)
-    return null
+    return DEFAULT_SETTINGS
   }
 }
 
@@ -86,21 +54,6 @@ export async function buildInvitationMetadata(
   const settings = await fetchSettings()
   const baseUrl = getBaseUrl()
 
-  // ====== FALLBACK jika settings tidak ada ======
-  if (!settings) {
-    console.warn('[metadata] Using fallback - settings not found')
-    return {
-      title: 'Undangan Pernikahan Digital 💍',
-      description: 'Anda diundang untuk merayakan pernikahan kami',
-      openGraph: {
-        title: 'Undangan Pernikahan Digital 💍',
-        description: 'Anda diundang untuk merayakan pernikahan kami',
-        locale: 'id_ID',
-        type: 'website',
-      },
-    }
-  }
-
   const {
     bride_name,
     groom_name,
@@ -116,19 +69,19 @@ export async function buildInvitationMetadata(
     meta_image_url,
   } = settings
 
-  // ====== TITLE ======
+  // Title dengan default fallback
   const autoTitle = `Undangan Pernikahan ${bride_name} & ${groom_name} 💍`
   const rawTitle = meta_title?.trim() || autoTitle
-  const title = truncateSafely(sanitizeText(rawTitle), 60)
+  const title = rawTitle.slice(0, 60)
 
-  // ====== DESCRIPTION ======
+  // Description dengan default fallback
   const dateStr = formatDate(wedding_date)
   const autoDescription = `Kami mengundang Anda untuk merayakan pernikahan ${bride_fullname} & ${groom_fullname}${dateStr ? ` pada ${dateStr}` : ''
     }. Kehadiran Anda adalah kehormatan bagi kami.`
   const rawDescription = meta_description?.trim() || autoDescription
-  const description = truncateSafely(sanitizeText(rawDescription), 160)
+  const description = rawDescription.slice(0, 160)
 
-  // ====== IMAGE ======
+  // Image dengan fallback
   const ogImage =
     sanitizeUrl(meta_image_url) ||
     sanitizeUrl(hero_image_url) ||
@@ -137,7 +90,6 @@ export async function buildInvitationMetadata(
 
   const url = code ? `${baseUrl}/u/${code}` : baseUrl
 
-  // ====== BUILD METADATA ======
   return {
     title,
     description,

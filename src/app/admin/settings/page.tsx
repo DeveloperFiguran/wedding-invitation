@@ -27,7 +27,9 @@ import {
   validateInstagram, validateHashtag, validateDate,
   isValidImageUrl, ValidationErrors, hasErrors
 } from '@/lib/validation'
-import { localToISO, isoToLocal } from '@/lib/utils'
+import { localToISO, isoToLocal, TIMEZONE_OPTIONS } from '@/lib/utils'
+import { DEFAULT_SETTINGS, mergeWithDefaults } from '@/lib/default-settings'
+
 
 /* ============================================
    HELPER: Preview gambar untuk URL input
@@ -66,6 +68,7 @@ export default function AdminSettings() {
     fetchSettings()
   }, [])
 
+  // Di dalam component, update fetchSettings:
   async function fetchSettings() {
     try {
       const { data, error } = await supabase
@@ -74,10 +77,19 @@ export default function AdminSettings() {
         .limit(1)
         .single()
 
-      if (error) throw error
-      setSettings(data)
+      if (error || !data) {
+        // DB kosong - gunakan default
+        console.warn('Settings belum ada, menggunakan default')
+        setSettings({ ...DEFAULT_SETTINGS, id: 'new' }) // id 'new' untuk insert
+        setLoading(false)
+        return
+      }
+      
+      // Merge dengan default untuk field kosong
+      setSettings(mergeWithDefaults(data))
     } catch (err) {
-      toast.error('Gagal memuat pengaturan')
+      console.error('Fetch error:', err)
+      setSettings({ ...DEFAULT_SETTINGS, id: 'new' })
     } finally {
       setLoading(false)
     }
@@ -215,24 +227,38 @@ export default function AdminSettings() {
     return !hasErrors(newErrors)
   }
 
+  // Update handleSave dengan auto-insert:
   const handleSave = async () => {
     if (!settings) return
 
     if (!validateSettings()) {
       toast.error('Mohon periksa kembali form. Ada isian yang tidak valid.')
-      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
     setSaving(true)
     try {
-      const { error } = await supabase
-        .from('wedding_settings')
-        .update({ ...settings, updated_at: new Date().toISOString() })
-        .eq('id', settings.id)
+      let error
+      
+      if (settings.id === 'new') {
+        // INSERT baru jika belum ada
+        const { id, ...dataToInsert } = settings
+        ;({ error } = await supabase
+          .from('wedding_settings')
+          .insert({ ...dataToInsert, updated_at: new Date().toISOString() }))
+      } else {
+        // UPDATE jika sudah ada
+        ;({ error } = await supabase
+          .from('wedding_settings')
+          .update({ ...settings, updated_at: new Date().toISOString() })
+          .eq('id', settings.id))
+      }
+      
       if (error) throw error
       toast.success('Pengaturan berhasil disimpan! 🎉')
-      setErrors({})
+      
+      // Reload untuk dapat ID yang benar
+      fetchSettings()
     } catch (err) {
       toast.error('Gagal menyimpan pengaturan')
     } finally {
@@ -585,6 +611,28 @@ export default function AdminSettings() {
         icon={<Calendar size={20} />}
       >
         <div className="space-y-6">
+
+          {/* Timezone Acara */}
+          <div>
+            <label className="block text-sm font-semibold text-[#6B5B5B] mb-2">
+              Timezone Acara
+            </label>
+            <select
+              value={settings.event_timezone || 'Asia/Jakarta'}
+              onChange={(e) => updateField('event_timezone', e.target.value)}
+              className="w-full px-4 py-3 rounded-2xl border border-[#C9A96E]/20 bg-white/70 text-[#3D342B] focus:border-[#C9A96E] focus:outline-none focus:ring-2 focus:ring-[#C9A96E]/20 transition-all"
+            >
+              {TIMEZONE_OPTIONS.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-[#6B5B5B]/50">
+              Timezone untuk menampilkan jam acara kepada tamu
+            </p>
+          </div>
+
           {/* Tanggal utama */}
           <div className="p-4 bg-gradient-to-r from-[#C9A96E]/5 to-[#DCAE96]/5 rounded-2xl border border-[#C9A96E]/10">
             <p className="text-xs font-semibold text-[#6B5B5B]/70 uppercase tracking-wider mb-3">
