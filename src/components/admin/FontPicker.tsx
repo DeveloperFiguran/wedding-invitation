@@ -21,10 +21,10 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
 
   return (
     <div className="space-y-4">
-      {/* ✅ Load font yang sedang di-preview */}
+      {/* ✅ Load font yang sedang di-hover untuk preview */}
       {previewFont && <FontLoader presetId={previewFont} />}
-      
-      {/* ✅ Load font current untuk preview */}
+
+      {/* ✅ Load font current */}
       <FontLoader presetId={currentPreset} />
 
       <div className="flex items-center gap-2 text-[#6B5B5B]">
@@ -78,9 +78,10 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
                 </div>
               )}
 
+              {/* ====== PREVIEW FONT ====== */}
               <div className="mb-3 pb-3 border-b border-[#C9A96E]/10">
                 <p
-                  className="text-3xl mb-1"
+                  className="text-3xl mb-2"
                   style={{
                     fontFamily: `'${font.script}', ${font.scriptFallback}`,
                     color: '#C9A96E',
@@ -89,13 +90,31 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
                   {font.preview}
                 </p>
                 <p
-                  className="text-sm"
+                  className="text-base font-medium mb-1"
                   style={{
-                    fontFamily: `'${font.body}', ${font.bodyFallback}`,
+                    fontFamily: `'${font.display}', ${font.displayFallback}`,
+                    color: '#3D342B',
+                  }}
+                >
+                  The Wedding Celebration
+                </p>
+                <p
+                  className="text-sm italic"
+                  style={{
+                    fontFamily: `'${font.elegant}', ${font.elegantFallback}`,
                     color: '#6B5B5B',
                   }}
                 >
-                  The Wedding of Aurelia & Arjuna
+                  Kami mengundang Anda untuk hadir
+                </p>
+                <p
+                  className="text-xs mt-1"
+                  style={{
+                    fontFamily: `'${font.body}', ${font.bodyFallback}`,
+                    color: '#8A7F75',
+                  }}
+                >
+                  Sabtu, 25 Desember 2025 · Jakarta
                 </p>
               </div>
 
