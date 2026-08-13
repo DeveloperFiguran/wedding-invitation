@@ -51,7 +51,7 @@ export function HeroSection({ settings }: HeroSectionProps) {
           primaryColor={settings.primary_color}
           accentColor={settings.accent_color}
           backgroundColor={settings.background_color}
-          variant="arch"
+          variant="section"
           style={settings.background_style || 'botanical'}
         />
       )}
