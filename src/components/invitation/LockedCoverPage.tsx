@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { getFontVariables } from '@/lib/fonts'
 import { DEFAULT_SETTINGS, mergeWithDefaults } from '@/lib/default-settings'
 import { MusicPlayer } from './MusicPlayer'
+import { FontLoader } from '@/components/FontLoader'
 
 export function LockedCoverPage() {
   const [settings, setSettings] = useState<WeddingSettings | null>(null)
@@ -77,6 +78,10 @@ export function LockedCoverPage() {
       className="relative min-h-screen mobile-full overflow-hidden"
       style={getFontVariables(settings.font_preset)}
     >
+
+      {/* ✅ FONT LOADER */}
+      <FontLoader presetId={settings.font_preset || 'classic-elegance'} />
+      
       {/* ====== MUSIC PLAYER (Global) ====== */}
       {settings.enable_music && settings.music_url && (
         <MusicPlayer
