@@ -1,8 +1,75 @@
 'use client'
 
-import { BACKGROUND_STYLES, BackgroundStyle } from '@/lib/backgrounds'
-import { Check } from 'lucide-react'
-import { toast } from 'sonner'
+import { motion } from 'framer-motion'
+import { Check, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+
+export interface BackgroundStylePreset {
+  id: string
+  name: string
+  description: string
+  icon: string
+  category: 'nature' | 'geometric' | 'texture' | 'artistic' | 'minimal' | 'cultural' | 'abstract'
+}
+
+export const BACKGROUND_STYLES: BackgroundStylePreset[] = [
+  // ====== NATURE (6) ======
+  { id: 'botanical', name: 'Botanical', description: 'Daun & floral natural', icon: '🌿', category: 'nature' },
+  { id: 'floral-garden', name: 'Floral Garden', description: 'Bunga taman mekar', icon: '🌸', category: 'nature' },
+  { id: 'tropical-leaves', name: 'Tropical Leaves', description: 'Daun tropis lebat', icon: '🍃', category: 'nature' },
+  { id: 'cloud-sky', name: 'Cloud Sky', description: 'Awan langit lembut', icon: '☁️', category: 'nature' },
+  { id: 'ocean-waves', name: 'Ocean Waves', description: 'Ombak laut tenang', icon: '🌊', category: 'nature' },
+  { id: 'starry-night', name: 'Starry Night', description: 'Bintang malam romantis', icon: '✨', category: 'nature' },
+
+  // ====== GEOMETRIC (5) ======
+  { id: 'geometric', name: 'Geometric', description: 'Pola geometris modern', icon: '◇', category: 'geometric' },
+  { id: 'art-deco', name: 'Art Deco', description: 'Art deco klasik 1920an', icon: '⬖', category: 'geometric' },
+  { id: 'hexagon-grid', name: 'Hexagon Grid', description: 'Grid heksagon futuristik', icon: '⬡', category: 'geometric' },
+  { id: 'triangle-mosaic', name: 'Triangle Mosaic', description: 'Mosaik segitiga dinamis', icon: '△', category: 'geometric' },
+  { id: 'circular-ripple', name: 'Circular Ripple', description: 'Lingkaran riak konsisten', icon: '◉', category: 'geometric' },
+
+  // ====== TEXTURE (6) ======
+  { id: 'marble', name: 'Marble', description: 'Tekstur marmer elegan', icon: '⬜', category: 'texture' },
+  { id: 'rustic-wood', name: 'Rustic Wood', description: 'Kayu rustic alami', icon: '🪵', category: 'texture' },
+  { id: 'kraft-paper', name: 'Kraft Paper', description: 'Kertas kraft vintage', icon: '📜', category: 'texture' },
+  { id: 'silk-fabric', name: 'Silk Fabric', description: 'Sutra halus berkilau', icon: '🎀', category: 'texture' },
+  { id: 'linen-weave', name: 'Linen Weave', description: 'Anyaman linen natural', icon: '🧵', category: 'texture' },
+  { id: 'concrete-stone', name: 'Concrete Stone', description: 'Beton industrial modern', icon: '🪨', category: 'texture' },
+
+  // ====== ARTISTIC (5) ======
+  { id: 'watercolor', name: 'Watercolor', description: 'Cat air lembut', icon: '🎨', category: 'artistic' },
+  { id: 'ink-brush', name: 'Ink Brush', description: 'Kuas tinta ekspresif', icon: '🖌️', category: 'artistic' },
+  { id: 'oil-painting', name: 'Oil Painting', description: 'Lukisan minyak klasik', icon: '🖼️', category: 'artistic' },
+  { id: 'sketch-line', name: 'Sketch Line', description: 'Sketsa garis tangan', icon: '✏️', category: 'artistic' },
+  { id: 'abstract-splash', name: 'Abstract Splash', description: 'Splash abstrak warna', icon: '💫', category: 'artistic' },
+
+  // ====== MINIMAL (3) ======
+  { id: 'minimalist', name: 'Minimalist', description: 'Bersih & sederhana', icon: '◻', category: 'minimal' },
+  { id: 'dot-pattern', name: 'Dot Pattern', description: 'Titik-titik halus', icon: '⠿', category: 'minimal' },
+  { id: 'line-grid', name: 'Line Grid', description: 'Grid garis tipis', icon: '▦', category: 'minimal' },
+
+  // ====== CULTURAL (4) ======
+  { id: 'ornate', name: 'Ornate', description: 'Ornamen klasik mewah', icon: '❦', category: 'cultural' },
+  { id: 'baroque', name: 'Baroque', description: 'Baroque megah Eropa', icon: '🏛️', category: 'cultural' },
+  { id: 'arabesque', name: 'Arabesque', description: 'Arabesque timur tengah', icon: '🕌', category: 'cultural' },
+  { id: 'batik-indonesia', name: 'Batik Indonesia', description: 'Batik tradisional Indonesia', icon: '🇮🇩', category: 'cultural' },
+
+  // ====== ABSTRACT (3) ======
+  { id: 'gradient-mesh', name: 'Gradient Mesh', description: 'Gradien modern lembut', icon: '🌈', category: 'abstract' },
+  { id: 'aurora-glow', name: 'Aurora Glow', description: 'Aurora bercahaya magis', icon: '🌌', category: 'abstract' },
+  { id: 'bokeh-lights', name: 'Bokeh Lights', description: 'Bokeh cahaya romantis', icon: '💡', category: 'abstract' },
+]
+
+export const BACKGROUND_CATEGORIES = [
+  { id: 'all', name: 'Semua' },
+  { id: 'nature', name: 'Nature' },
+  { id: 'geometric', name: 'Geometric' },
+  { id: 'texture', name: 'Texture' },
+  { id: 'artistic', name: 'Artistic' },
+  { id: 'minimal', name: 'Minimal' },
+  { id: 'cultural', name: 'Cultural' },
+  { id: 'abstract', name: 'Abstract' },
+]
 
 interface BackgroundStylePickerProps {
   currentStyle: string
@@ -10,112 +77,75 @@ interface BackgroundStylePickerProps {
 }
 
 export function BackgroundStylePicker({ currentStyle, onSelect }: BackgroundStylePickerProps) {
-  const handleSelect = (style: BackgroundStyle) => {
-    onSelect(style.id)
-    toast.success(`Background "${style.name}" dipilih!`)
-  }
+  const [activeCategory, setActiveCategory] = useState('all')
+
+  const filteredStyles = activeCategory === 'all'
+    ? BACKGROUND_STYLES
+    : BACKGROUND_STYLES.filter((s) => s.category === activeCategory)
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {BACKGROUND_STYLES.map((style) => {
-        const active = currentStyle === style.id
-        return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-[#6B5B5B]">
+        <Sparkles size={18} className="text-[#C9A96E]" />
+        <p className="text-body-sm">
+          Pilih gaya background ({BACKGROUND_STYLES.length} pilihan)
+        </p>
+      </div>
+
+      {/* Category filter */}
+      <div className="flex flex-wrap gap-2">
+        {BACKGROUND_CATEGORIES.map((cat) => (
           <button
-            key={style.id}
-            onClick={() => handleSelect(style)}
-            className={`group text-left rounded-2xl border-2 transition-all duration-300 hover:shadow-lg bg-white overflow-hidden relative ${
-              active
-                ? 'border-[#C9A96E] shadow-md'
-                : 'border-[#C9A96E]/10 hover:border-[#C9A96E]/50'
+            key={cat.id}
+            onClick={() => setActiveCategory(cat.id)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              activeCategory === cat.id
+                ? 'bg-gradient-to-r from-[#C9A96E] to-[#DCAE96] text-white shadow-md'
+                : 'bg-white/60 text-[#6B5B5B] border border-[#C9A96E]/20 hover:bg-[#C9A96E]/5'
             }`}
           >
-            {active && (
-              <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#C9A96E] flex items-center justify-center z-10">
-                <Check size={14} className="text-white" />
-              </div>
-            )}
-
-            {/* Mini preview */}
-            <div className="h-24 relative overflow-hidden bg-gradient-to-br from-[#FBF8F3] to-[#F7E7CE]">
-              <StylePreview preview={style.preview} />
-            </div>
-
-            <div className="p-3">
-              <h4 className="font-display text-sm text-[#6B5B5B] mb-1">{style.name}</h4>
-              <p className="text-caption text-[#6B5B5B]/60 leading-snug line-clamp-2">{style.description}</p>
-            </div>
+            {cat.name}
           </button>
-        )
-      })}
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {filteredStyles.map((style, index) => {
+          const isCurrent = currentStyle === style.id
+
+          return (
+            <motion.button
+              key={style.id}
+              onClick={() => onSelect(style.id)}
+              className={`relative rounded-2xl p-4 border-2 text-left transition-all duration-300 ${
+                isCurrent
+                  ? 'border-[#C9A96E] bg-[#C9A96E]/5 shadow-lg shadow-[#C9A96E]/20'
+                  : 'border-[#C9A96E]/10 hover:border-[#C9A96E]/40 hover:shadow-md bg-white/50'
+              }`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {isCurrent && (
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#C9A96E] rounded-full flex items-center justify-center shadow-md">
+                  <Check size={14} className="text-white" />
+                </div>
+              )}
+
+              <div className="text-3xl mb-2">{style.icon}</div>
+
+              <h4 className="font-display text-sm font-semibold text-[#3D342B] mb-1">
+                {style.name}
+              </h4>
+              <p className="text-caption text-[#6B5B5B]/60">
+                {style.description}
+              </p>
+            </motion.button>
+          )
+        })}
+      </div>
     </div>
   )
-}
-
-/* Preview mini untuk setiap style */
-function StylePreview({ preview }: { preview: string }) {
-  switch (preview) {
-    case 'botanical':
-      return (
-        <svg className="absolute bottom-0 right-0 w-20 h-20 opacity-40" viewBox="0 0 80 80" fill="none">
-          <path d="M10 70 Q30 60 45 40 Q55 25 70 15" stroke="#B8935A" strokeWidth="1.5" />
-          <ellipse cx="30" cy="55" rx="8" ry="3" transform="rotate(-30 30 55)" fill="#B8935A" />
-          <ellipse cx="45" cy="40" rx="7" ry="3" transform="rotate(-35 45 40)" fill="#B8935A" />
-          <circle cx="65" cy="18" r="5" fill="#D4A574" />
-        </svg>
-      )
-    case 'damask':
-      return (
-        <>
-          <div className="absolute inset-3 border-2 border-[#B8935A]/40 rounded" />
-          <svg className="absolute inset-0 w-full h-full opacity-20">
-            <pattern id="prev-damask" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-              <path d="M12 4 C15 7 16 10 12 13 C8 10 9 7 12 4 Z" fill="#B8935A" />
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#prev-damask)" />
-          </svg>
-        </>
-      )
-    case 'celestial':
-      return (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2b221c] to-[#1d1713]">
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full"
-              style={{ left: `${(i * 31) % 100}%`, top: `${(i * 47) % 100}%`, opacity: 0.6 }}
-            />
-          ))}
-          <div className="absolute top-3 right-3 w-8 h-8 rounded-full border border-[#D4A574]/60" />
-        </div>
-      )
-    case 'artdeco':
-      return (
-        <svg className="absolute inset-0 w-full h-full opacity-40" viewBox="0 0 100 60" fill="none">
-          <path d="M0 0 L100 60" stroke="#B8935A" strokeWidth="0.8" />
-          <path d="M0 0 L80 60" stroke="#B8935A" strokeWidth="0.6" />
-          <path d="M0 0 L100 45" stroke="#B8935A" strokeWidth="0.6" />
-          <circle cx="12" cy="12" r="3" fill="#D4A574" />
-          <rect x="60" y="20" width="20" height="20" transform="rotate(45 70 30)" stroke="#B8935A" strokeWidth="0.8" />
-        </svg>
-      )
-    case 'glow':
-      return (
-        <>
-          <div className="absolute top-2 left-2 w-16 h-16 rounded-full bg-[#B8935A]/20 blur-xl" />
-          <div className="absolute bottom-2 right-2 w-20 h-20 rounded-full bg-[#D4A574]/25 blur-xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-[#B8935A]/20" />
-        </>
-      )
-    case 'floral':
-      return (
-        <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 opacity-50" viewBox="0 0 80 80" fill="none">
-          {[0, 60, 120, 180, 240, 300].map((angle) => (
-            <ellipse key={angle} cx="40" cy="25" rx="8" ry="15" fill="#D4A574" transform={`rotate(${angle} 40 40)`} />
-          ))}
-          <circle cx="40" cy="40" r="6" fill="#B8935A" />
-        </svg>
-      )
-    default:
-      return null
-  }
 }
