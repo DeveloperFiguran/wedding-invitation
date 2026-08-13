@@ -303,21 +303,21 @@ export default function AdminSettings() {
       {/* ============================================
           THEME: Preset Tema
       ============================================ */}
-      <Card
-        title="Preset Tema"
-        subtitle="Pilih tema warna siap pakai dengan satu klik"
-        icon={<Palette size={20} />}
-      >
-        <ThemePicker
-          currentColors={{
-            primary_color: settings.primary_color,
-            accent_color: settings.accent_color,
-            text_color: settings.text_color,
-            background_color: settings.background_color,
-          }}
-          onApply={applyThemePreset}
-        />
-      </Card>
+<Card
+  title="Preset Tema"
+  subtitle="Pilih tema warna siap pakai dengan satu klik"
+  icon={<Palette size={20} />}
+>
+  <ThemePicker
+    currentColors={{
+      primary_color: settings.primary_color,
+      accent_color: settings.accent_color,
+      text_color: settings.text_color,
+      background_color: settings.background_color,
+    }}
+    onApply={applyThemePreset}
+  />
+</Card>
 
       {/* ============================================
           THEME: Kustomisasi Warna
@@ -403,33 +403,29 @@ export default function AdminSettings() {
         </div>
       </Card>
 
-      {/* ============================================
-          THEME: Style Font
-      ============================================ */}
-      <Card
-        title="Style Font"
-        subtitle="Pilih kombinasi font untuk seluruh undangan"
-        icon={<Type size={20} />}
-      >
-        <FontPicker
-          currentPreset={settings.font_preset || 'classic-elegance'}
-          onSelect={(presetId) => updateField('font_preset', presetId)}
-        />
-      </Card>
+{/* STYLE FONT (32 Pilihan) */}
+<Card
+  title="Style Font"
+  subtitle="Pilih kombinasi font untuk seluruh undangan"
+  icon={<Type size={20} />}
+>
+  <FontPicker
+    currentPreset={settings.font_preset || 'classic-elegance'}
+    onSelect={(presetId) => updateField('font_preset', presetId)}
+  />
+</Card>
 
-      {/* ============================================
-          THEME: Style Background
-      ============================================ */}
-      <Card
-        title="Style Background"
-        subtitle="Pilih gaya background untuk area tanpa foto"
-        icon={<Sparkles size={20} />}
-      >
-        <BackgroundStylePicker
-          currentStyle={settings.background_style || 'botanical'}
-          onSelect={(styleId) => updateField('background_style', styleId)}
-        />
-      </Card>
+{/* STYLE BACKGROUND (32 Pilihan) */}
+<Card
+  title="Style Background"
+  subtitle="Pilih gaya background untuk area tanpa foto"
+  icon={<Sparkles size={20} />}
+>
+  <BackgroundStylePicker
+    currentStyle={settings.background_style || 'botanical'}
+    onSelect={(styleId) => updateField('background_style', styleId)}
+  />
+</Card>
 
       {/* ============================================
           SEO & MEDIA SOSIAL
