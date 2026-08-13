@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Check, Type } from 'lucide-react'
 import { useState } from 'react'
 import { FONT_PRESETS, FONT_CATEGORIES } from '@/lib/fonts'
+import { FontLoader } from '@/components/FontLoader'
 
 interface FontPickerProps {
   currentPreset: string
@@ -12,6 +13,7 @@ interface FontPickerProps {
 
 export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
   const [activeCategory, setActiveCategory] = useState('all')
+  const [previewFont, setPreviewFont] = useState<string | null>(null)
 
   const filteredFonts = activeCategory === 'all'
     ? FONT_PRESETS
@@ -19,6 +21,12 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
 
   return (
     <div className="space-y-4">
+      {/* ✅ Load font yang sedang di-preview */}
+      {previewFont && <FontLoader presetId={previewFont} />}
+      
+      {/* ✅ Load font current untuk preview */}
+      <FontLoader presetId={currentPreset} />
+
       <div className="flex items-center gap-2 text-[#6B5B5B]">
         <Type size={18} className="text-[#C9A96E]" />
         <p className="text-body-sm">
@@ -51,6 +59,8 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
             <motion.button
               key={font.id}
               onClick={() => onSelect(font.id)}
+              onMouseEnter={() => setPreviewFont(font.id)}
+              onMouseLeave={() => setPreviewFont(null)}
               className={`relative rounded-2xl p-5 border-2 text-left transition-all duration-300 ${
                 isCurrent
                   ? 'border-[#C9A96E] bg-[#C9A96E]/5 shadow-lg shadow-[#C9A96E]/20'
