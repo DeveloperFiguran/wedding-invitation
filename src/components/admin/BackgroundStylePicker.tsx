@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Check, Sparkles } from 'lucide-react'
 import { useState } from 'react'
+import { MiniBackgroundPreview } from './MiniBackgroundPreview'
 
 export interface BackgroundStylePreset {
   id: string
@@ -74,9 +75,18 @@ export const BACKGROUND_CATEGORIES = [
 interface BackgroundStylePickerProps {
   currentStyle: string
   onSelect: (styleId: string) => void
+  primaryColor?: string
+  accentColor?: string
+  backgroundColor?: string
 }
 
-export function BackgroundStylePicker({ currentStyle, onSelect }: BackgroundStylePickerProps) {
+export function BackgroundStylePicker({
+  currentStyle,
+  onSelect,
+  primaryColor = '#B8935A',
+  accentColor = '#D4A574',
+  backgroundColor = '#FBF8F3',
+}: BackgroundStylePickerProps) {
   const [activeCategory, setActiveCategory] = useState('all')
 
   const filteredStyles = activeCategory === 'all'
@@ -117,7 +127,7 @@ export function BackgroundStylePicker({ currentStyle, onSelect }: BackgroundStyl
             <motion.button
               key={style.id}
               onClick={() => onSelect(style.id)}
-              className={`relative rounded-2xl p-4 border-2 text-left transition-all duration-300 ${
+              className={`relative rounded-2xl p-3 border-2 text-left transition-all duration-300 ${
                 isCurrent
                   ? 'border-[#C9A96E] bg-[#C9A96E]/5 shadow-lg shadow-[#C9A96E]/20'
                   : 'border-[#C9A96E]/10 hover:border-[#C9A96E]/40 hover:shadow-md bg-white/50'
@@ -129,12 +139,20 @@ export function BackgroundStylePicker({ currentStyle, onSelect }: BackgroundStyl
               whileTap={{ scale: 0.98 }}
             >
               {isCurrent && (
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#C9A96E] rounded-full flex items-center justify-center shadow-md">
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#C9A96E] rounded-full flex items-center justify-center shadow-md z-10">
                   <Check size={14} className="text-white" />
                 </div>
               )}
 
-              <div className="text-3xl mb-2">{style.icon}</div>
+              {/* ====== VISUAL PREVIEW ====== */}
+              <div className="mb-2">
+                <MiniBackgroundPreview
+                  styleId={style.id}
+                  primaryColor={primaryColor}
+                  accentColor={accentColor}
+                  backgroundColor={backgroundColor}
+                />
+              </div>
 
               <h4 className="font-display text-sm font-semibold text-[#3D342B] mb-1">
                 {style.name}
