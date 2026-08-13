@@ -2,7 +2,7 @@
 import { BackgroundStylePicker } from '@/components/admin/BackgroundStylePicker'
 import { FontPicker } from '@/components/admin/FontPicker'
 
-export default function TestPreview() {
+export default function Test() {
   return (
     <div className="p-8 space-y-8">
       <h1 className="text-2xl font-bold">Test Preview</h1>
