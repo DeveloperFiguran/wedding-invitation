@@ -29,7 +29,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'timeless-serif',
@@ -44,7 +44,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'vintage-charm',
@@ -59,7 +59,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'prata-luxury',
@@ -74,7 +74,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'bodoni-chic',
@@ -89,7 +89,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'libre-caslon',
@@ -104,7 +104,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
 
   // ====== ROMANTIC (6) ======
@@ -121,7 +121,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'sacramento-dream',
@@ -136,7 +136,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'allura-grace',
@@ -151,7 +151,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'alex-brush',
@@ -166,7 +166,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'lavishly-yours',
@@ -181,7 +181,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'mea-culpa',
@@ -196,7 +196,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
 
   // ====== ROYAL (4) ======
@@ -213,7 +213,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'cinzel-decorative',
@@ -228,7 +228,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'italiana-luxe',
@@ -243,7 +243,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'elsie-royal',
@@ -258,7 +258,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
 
   // ====== MODERN (6) ======
@@ -275,7 +275,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'contemporary',
@@ -290,7 +290,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'sans-serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'urban-chic',
@@ -305,7 +305,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'sans-serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'outfit-fresh',
@@ -320,7 +320,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'sans-serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'inter-clean',
@@ -335,7 +335,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'sans-serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'sora-modern',
@@ -350,7 +350,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'sans-serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
 
   // ====== MINIMAL (4) ======
@@ -367,7 +367,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'marcellus-pure',
@@ -382,7 +382,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'serif',
     elegantFallback: 'serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'jost-light',
@@ -397,7 +397,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'sans-serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
   {
     id: 'quicksand-soft',
@@ -412,7 +412,7 @@ export const FONT_PRESETS: FontPreset[] = [
     displayFallback: 'sans-serif',
     elegantFallback: 'sans-serif',
     bodyFallback: 'sans-serif',
-    preview: 'Aurelia & Arjuna',
+    preview: 'Wanita & Pria',
   },
 ]
 
