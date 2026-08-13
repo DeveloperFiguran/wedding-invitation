@@ -249,94 +249,181 @@ export function LockedCoverPage() {
           </motion.div>
         </div>
 
-        {/* ====== Bottom - Notice Card ====== */}
-        <div className="w-full max-w-sm pb-2">
-          <motion.div
-            className={`rounded-3xl p-6 relative overflow-hidden ${
-              isDark ? 'glass-effect-highlight' : 'bg-white/75 backdrop-blur-md'
-            }`}
-            style={{
-              boxShadow: isDark
-                ? `0 8px 32px rgba(0,0,0,0.15), 0 0 0 1px ${settings.accent_color}30 inset`
-                : `0 8px 32px ${settings.primary_color}15, 0 0 0 1px ${settings.primary_color}20`,
-            }}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.1, duration: 0.9 }}
-          >
-            {/* Border gradient atas */}
-            <div
-              className="absolute top-0 left-0 right-0 h-0.5"
-              style={{
-                background: `linear-gradient(90deg, transparent, ${settings.accent_color}, transparent)`,
-              }}
-            />
+        {/* ====== Bottom - Notice Card (ADAPTIF TEMA) ====== */}
+<div className="w-full max-w-sm pb-2">
+  <motion.div
+    className={`relative rounded-3xl p-6 overflow-hidden backdrop-blur-md ${
+      isDark ? '' : ''
+    }`}
+    style={{
+      // Background card adaptif
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.75)',
+      // Border dengan warna tema
+      border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.15)' : `${settings.primary_color}25`}`,
+      // Shadow adaptif dengan warna tema
+      boxShadow: isDark
+        ? `0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px ${settings.accent_color}20 inset`
+        : `0 8px 32px ${settings.primary_color}15, 0 0 0 1px ${settings.primary_color}15 inset`,
+    }}
+    initial={{ opacity: 0, y: 30 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 2.1, duration: 0.9 }}
+  >
+    {/* Border gradient atas - warna tema */}
+    <div
+      className="absolute top-0 left-0 right-0 h-0.5"
+      style={{
+        background: `linear-gradient(90deg, transparent, ${settings.accent_color}, transparent)`,
+      }}
+    />
 
-            {/* Corner accents */}
-            <div
-              className="absolute top-3 left-3 w-4 h-4 border-t border-l"
-              style={{ borderColor: `${settings.accent_color}60` }}
-            />
-            <div
-              className="absolute top-3 right-3 w-4 h-4 border-t border-r"
-              style={{ borderColor: `${settings.accent_color}60` }}
-            />
-            <div
-              className="absolute bottom-3 left-3 w-4 h-4 border-b border-l"
-              style={{ borderColor: `${settings.accent_color}60` }}
-            />
-            <div
-              className="absolute bottom-3 right-3 w-4 h-4 border-b border-r"
-              style={{ borderColor: `${settings.accent_color}60` }}
-            />
+    {/* Corner accents - warna tema */}
+    <div
+      className="absolute top-3 left-3 w-4 h-4 border-t border-l"
+      style={{ borderColor: `${settings.accent_color}60` }}
+    />
+    <div
+      className="absolute top-3 right-3 w-4 h-4 border-t border-r"
+      style={{ borderColor: `${settings.accent_color}60` }}
+    />
+    <div
+      className="absolute bottom-3 left-3 w-4 h-4 border-b border-l"
+      style={{ borderColor: `${settings.accent_color}60` }}
+    />
+    <div
+      className="absolute bottom-3 right-3 w-4 h-4 border-b border-r"
+      style={{ borderColor: `${settings.accent_color}60` }}
+    />
 
-            {/* Content - Pesan privat */}
-            <div className="flex justify-center mb-3">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: `${settings.primary_color}20` }}
-              >
-                {isUsingDefault ? (
-                  <Music size={22} style={{ color: settings.primary_color }} />
-                ) : (
-                  <Lock size={22} style={{ color: settings.primary_color }} />
-                )}
-              </div>
-            </div>
-            <h3
-              className="font-elegant text-xl md:text-2xl font-semibold leading-tight mb-2"
-              style={{ color: isDark ? '#FFFFFF' : settings.text_color }}
-            >
-              {isUsingDefault ? 'Selamat Datang' : 'Undangan Digital'}
-            </h3>
-            {/* <p className="text-body-sm leading-relaxed" style={{ color: faintColor }}>
-              {isUsingDefault
-                ? 'Undangan ini belum dikonfigurasi. Silakan masuk ke admin panel untuk mengatur data pernikahan.'
-                : 'Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.'}
-            </p> */}
-            <p className="text-body-sm leading-relaxed" style={{ color: faintColor }}>
-              {'Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.'}
-            </p>
+    {/* ====== Icon Circle - Warna Tema ====== */}
+    <div className="flex justify-center mb-4">
+      <motion.div
+        className="relative w-14 h-14 rounded-full flex items-center justify-center"
+        style={{
+          // Background dengan warna tema (opacity rendah)
+          backgroundColor: `${settings.primary_color}15`,
+          // Border halus dengan warna tema
+          border: `1px solid ${settings.primary_color}30`,
+        }}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 2.3, type: 'spring', damping: 15 }}
+      >
+        {/* Glow effect di belakang icon */}
+        <div
+          className="absolute inset-0 rounded-full blur-md"
+          style={{
+            background: `radial-gradient(circle, ${settings.primary_color}30 0%, transparent 70%)`,
+          }}
+        />
+        {/* Icon */}
+        {isUsingDefault ? (
+          <Music
+            size={24}
+            style={{ color: settings.primary_color }}
+            className="relative z-10"
+          />
+        ) : (
+          <Lock
+            size={24}
+            style={{ color: settings.primary_color }}
+            className="relative z-10"
+          />
+        )}
+      </motion.div>
+    </div>
 
-            {/* Tombol ke admin (hanya muncul jika pakai default) */}
-            {/* {isUsingDefault && (
-              <motion.a
-                href="/admin"
-                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:scale-105"
-                style={{
-                  backgroundColor: settings.primary_color,
-                  color: '#FFFFFF',
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 2.5 }}
-              >
-                <Lock size={14} />
-                Setup Undangan
-              </motion.a>
-            )} */}
-          </motion.div>
-        </div>
+    {/* ====== Judul - Warna Adaptif ====== */}
+    <motion.h3
+      className="font-elegant text-xl md:text-2xl font-semibold leading-tight mb-2 text-center"
+      style={{
+        color: isDark ? '#FFFFFF' : settings.text_color,
+        // Text shadow subtle untuk dark mode
+        textShadow: isDark ? '0 2px 10px rgba(0, 0, 0, 0.3)' : 'none',
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 2.4 }}
+    >
+      {isUsingDefault ? 'Selamat Datang' : 'Undangan Digital'}
+    </motion.h3>
+
+    {/* ====== Pesan - Warna Adaptif ====== */}
+    <motion.p
+      className="text-body-sm leading-relaxed text-center"
+      style={{
+        color: isDark ? 'rgba(255, 255, 255, 0.75)' : `${settings.text_color}B3`,
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 2.5 }}
+    >
+      {isUsingDefault
+        ? 'Undangan ini belum dikonfigurasi. Silakan masuk ke admin panel untuk mengatur data pernikahan.'
+        : 'Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.'}
+    </motion.p>
+
+    {/* ====== Divider dengan Warna Tema ====== */}
+    <div className="flex items-center justify-center gap-2 mt-4 mb-4">
+      <div
+        className="w-12 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${settings.accent_color}60)`,
+        }}
+      />
+      <div
+        className="w-1.5 h-1.5 rounded-full"
+        style={{ backgroundColor: settings.accent_color }}
+      />
+      <div
+        className="w-12 h-px"
+        style={{
+          background: `linear-gradient(270deg, transparent, ${settings.accent_color}60)`,
+        }}
+      />
+    </div>
+
+    {/* ====== Tombol Setup (hanya jika default) ====== */}
+    {isUsingDefault && (
+      <motion.a
+        href="/admin"
+        className="mt-2 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+        style={{
+          // Gradient dengan warna tema
+          background: `linear-gradient(135deg, ${settings.primary_color}, ${settings.accent_color})`,
+          color: '#FFFFFF',
+          boxShadow: `0 4px 15px ${settings.primary_color}40`,
+        }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 2.6 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Lock size={14} />
+        Setup Undangan
+      </motion.a>
+    )}
+
+    {/* ====== Hashtag/Footer kecil dengan warna tema ====== */}
+    {!isUsingDefault && hasValue(settings.wedding_hashtag) && (
+      <motion.p
+        className="mt-4 text-center text-caption font-script"
+        style={{
+          color: settings.primary_color,
+          opacity: isDark ? 0.9 : 0.7,
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2.7 }}
+      >
+        {settings.wedding_hashtag}
+      </motion.p>
+    )}
+  </motion.div>
+</div>
+
+        
       </div>
     </div>
   )
