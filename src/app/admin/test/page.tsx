@@ -1,3 +1,4 @@
+'use client'
 // src/app/admin/test-preview/page.tsx
 import { BackgroundStylePicker } from '@/components/admin/BackgroundStylePicker'
 import { FontPicker } from '@/components/admin/FontPicker'
