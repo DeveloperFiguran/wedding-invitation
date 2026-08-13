@@ -267,6 +267,10 @@ export function InvitationPage({ code }: { code: string }) {
         ...getFontVariables(settings.font_preset),
       }}
     >
+
+      {/* ✅ FONT LOADER */}
+      <FontLoader presetId={settings.font_preset || 'classic-elegance'} />
+      
       {/* Music Player - Level Global */}
       {settings.enable_music && settings.music_url && (
         <MusicPlayer
