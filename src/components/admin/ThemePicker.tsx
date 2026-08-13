@@ -1,8 +1,9 @@
 'use client'
 
-import { THEME_PRESETS, ThemePreset } from '@/lib/themes'
-import { Check } from 'lucide-react'
-import { toast } from 'sonner'
+import { motion } from 'framer-motion'
+import { Check, Palette } from 'lucide-react'
+import { useState } from 'react'
+import { THEME_PRESETS, THEME_CATEGORIES, ThemePreset, findThemeByColors } from '@/lib/themes'
 
 interface ThemePickerProps {
   currentColors: {
@@ -15,51 +16,90 @@ interface ThemePickerProps {
 }
 
 export function ThemePicker({ currentColors, onApply }: ThemePickerProps) {
-  const isActivePreset = (preset: ThemePreset) => {
-    return (
-      preset.primary_color.toLowerCase() === currentColors.primary_color.toLowerCase() &&
-      preset.accent_color.toLowerCase() === currentColors.accent_color.toLowerCase() &&
-      preset.text_color.toLowerCase() === currentColors.text_color.toLowerCase() &&
-      preset.background_color.toLowerCase() === currentColors.background_color.toLowerCase()
-    )
-  }
+  const [activeCategory, setActiveCategory] = useState('all')
+  const currentTheme = findThemeByColors(currentColors)
 
-  const handleApply = (preset: ThemePreset) => {
-    onApply(preset)
-    toast.success(`Tema "${preset.name}" diterapkan!`)
-  }
+  const filteredThemes = activeCategory === 'all'
+    ? THEME_PRESETS
+    : THEME_PRESETS.filter((t) => t.category === activeCategory)
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {THEME_PRESETS.map((preset) => {
-        const active = isActivePreset(preset)
-        return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-[#6B5B5B]">
+        <Palette size={18} className="text-[#C9A96E]" />
+        <p className="text-body-sm">
+          Pilih tema warna siap pakai ({THEME_PRESETS.length} pilihan)
+        </p>
+      </div>
+
+      {/* Category filter */}
+      <div className="flex flex-wrap gap-2">
+        {THEME_CATEGORIES.map((cat) => (
           <button
-            key={preset.id}
-            onClick={() => handleApply(preset)}
-            className={`group text-left p-4 rounded-2xl border-2 transition-all duration-300 hover:shadow-lg bg-white relative ${
-              active
-                ? 'border-[#C9A96E] shadow-md'
-                : 'border-[#C9A96E]/10 hover:border-[#C9A96E]/50'
+            key={cat.id}
+            onClick={() => setActiveCategory(cat.id)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              activeCategory === cat.id
+                ? 'bg-gradient-to-r from-[#C9A96E] to-[#DCAE96] text-white shadow-md'
+                : 'bg-white/60 text-[#6B5B5B] border border-[#C9A96E]/20 hover:bg-[#C9A96E]/5'
             }`}
           >
-            {active && (
-              <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#C9A96E] flex items-center justify-center">
-                <Check size={14} className="text-white" />
-              </div>
-            )}
-
-            <div className="flex gap-1.5 mb-3 h-12 rounded-xl overflow-hidden">
-              <div className="flex-1" style={{ backgroundColor: preset.primary_color }} />
-              <div className="flex-1" style={{ backgroundColor: preset.accent_color }} />
-              <div className="flex-1" style={{ backgroundColor: preset.background_color }} />
-            </div>
-
-            <h4 className="font-display text-sm text-[#6B5B5B] mb-1">{preset.name}</h4>
-            <p className="text-caption text-[#6B5B5B]/60 leading-snug">{preset.description}</p>
+            {cat.name}
           </button>
-        )
-      })}
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {filteredThemes.map((theme, index) => {
+          const isCurrentTheme = currentTheme?.id === theme.id
+
+          return (
+            <motion.button
+              key={theme.id}
+              onClick={() => onApply(theme)}
+              className={`relative rounded-2xl p-4 border-2 text-left transition-all duration-300 ${
+                isCurrentTheme
+                  ? 'border-[#C9A96E] shadow-lg shadow-[#C9A96E]/20'
+                  : 'border-[#C9A96E]/10 hover:border-[#C9A96E]/40 hover:shadow-md'
+              }`}
+              style={{ backgroundColor: theme.background_color }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {isCurrentTheme && (
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#C9A96E] rounded-full flex items-center justify-center shadow-md">
+                  <Check size={14} className="text-white" />
+                </div>
+              )}
+
+              <div className="flex gap-1.5 mb-3">
+                <div
+                  className="w-8 h-8 rounded-full border border-black/10"
+                  style={{ backgroundColor: theme.primary_color }}
+                />
+                <div
+                  className="w-8 h-8 rounded-full border border-black/10"
+                  style={{ backgroundColor: theme.accent_color }}
+                />
+                <div
+                  className="w-8 h-8 rounded-full border border-black/10"
+                  style={{ backgroundColor: theme.text_color }}
+                />
+              </div>
+
+              <h4 className="font-display text-sm font-semibold" style={{ color: theme.text_color }}>
+                {theme.name}
+              </h4>
+              <p className="text-caption mt-0.5" style={{ color: theme.text_color, opacity: 0.6 }}>
+                {theme.description}
+              </p>
+            </motion.button>
+          )
+        })}
+      </div>
     </div>
   )
 }
