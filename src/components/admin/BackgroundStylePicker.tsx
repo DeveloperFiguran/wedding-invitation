@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Check, Sparkles } from 'lucide-react'
 import { useState } from 'react'
-import { MiniBackgroundPreview } from './MiniBackgroundPreview'
+import { BackgroundPreview } from './BackgroundPreview'
 
 export interface BackgroundStylePreset {
   id: string
@@ -146,7 +146,7 @@ export function BackgroundStylePicker({
 
               {/* ====== VISUAL PREVIEW ====== */}
               <div className="mb-2">
-                <MiniBackgroundPreview
+                <BackgroundPreview
                   styleId={style.id}
                   primaryColor={primaryColor}
                   accentColor={accentColor}
