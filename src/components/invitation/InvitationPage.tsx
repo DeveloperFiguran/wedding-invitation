@@ -22,6 +22,7 @@ import { FallingPetals } from './FallingPetals'
 import { ScrollProgress } from './ScrollProgress'
 import { SectionNav } from './SectionNav'
 import { getFontVariables } from '@/lib/fonts'
+import { FontLoader } from '@/components/FontLoader'
 import {
   sanitizeText, sanitizeUrl, sanitizeInstagramUsername, sanitizeHashtag
 } from '@/lib/validation'
