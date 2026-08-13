@@ -358,9 +358,7 @@ export function LockedCoverPage() {
       animate={{ opacity: 1 }}
       transition={{ delay: 2.5 }}
     >
-      {isUsingDefault
-        ? 'Undangan ini belum dikonfigurasi. Silakan masuk ke admin panel untuk mengatur data pernikahan.'
-        : 'Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.'}
+      {'Undangan ini bersifat privat. Silakan buka melalui link resmi yang telah dikirimkan kepada Anda.'}
     </motion.p>
 
     {/* ====== Divider dengan Warna Tema ====== */}
@@ -384,7 +382,7 @@ export function LockedCoverPage() {
     </div>
 
     {/* ====== Tombol Setup (hanya jika default) ====== */}
-    {isUsingDefault && (
+    {/* {isUsingDefault && (
       <motion.a
         href="/admin"
         className="mt-2 w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
@@ -403,10 +401,10 @@ export function LockedCoverPage() {
         <Lock size={14} />
         Setup Undangan
       </motion.a>
-    )}
+    )} */}
 
     {/* ====== Hashtag/Footer kecil dengan warna tema ====== */}
-    {!isUsingDefault && hasValue(settings.wedding_hashtag) && (
+    {/* {!isUsingDefault && hasValue(settings.wedding_hashtag) && (
       <motion.p
         className="mt-4 text-center text-caption font-script"
         style={{
@@ -419,7 +417,7 @@ export function LockedCoverPage() {
       >
         {settings.wedding_hashtag}
       </motion.p>
-    )}
+    )} */}
   </motion.div>
 </div>
 
