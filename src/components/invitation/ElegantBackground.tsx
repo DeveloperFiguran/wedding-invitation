@@ -4,8 +4,9 @@ interface ElegantBackgroundProps {
   primaryColor: string
   accentColor: string
   backgroundColor: string
-  variant?: 'cover' | 'section' | 'arch'
+  variant?: 'cover' | 'section'
   style?: string
+  className?: string
 }
 
 export function ElegantBackground({
@@ -14,496 +15,672 @@ export function ElegantBackground({
   backgroundColor,
   variant = 'section',
   style = 'botanical',
+  className = '',
 }: ElegantBackgroundProps) {
-  const isCover = variant === 'cover'
+  const renderStyle = () => {
+    // ====== NATURE STYLES ======
+    if (['botanical', 'floral-garden', 'tropical-leaves'].includes(style)) {
+      return <BotanicalStyle primaryColor={primaryColor} accentColor={accentColor} variant={style} />
+    }
+
+    if (['cloud-sky', 'ocean-waves'].includes(style)) {
+      return <SkyWaterStyle primaryColor={primaryColor} accentColor={accentColor} variant={style} />
+    }
+
+    if (style === 'starry-night') {
+      return <StarryNightStyle primaryColor={primaryColor} accentColor={accentColor} />
+    }
+
+    // ====== GEOMETRIC STYLES ======
+    if (['geometric', 'art-deco', 'hexagon-grid', 'triangle-mosaic', 'circular-ripple'].includes(style)) {
+      return <GeometricStyle primaryColor={primaryColor} accentColor={accentColor} variant={style} />
+    }
+
+    // ====== TEXTURE STYLES ======
+    if (['marble', 'concrete-stone'].includes(style)) {
+      return <StoneTextureStyle primaryColor={primaryColor} accentColor={accentColor} variant={style} />
+    }
+
+    if (['rustic-wood', 'kraft-paper', 'linen-weave'].includes(style)) {
+      return <PaperTextureStyle primaryColor={primaryColor} accentColor={accentColor} variant={style} />
+    }
+
+    if (style === 'silk-fabric') {
+      return <SilkStyle primaryColor={primaryColor} accentColor={accentColor} />
+    }
+
+    // ====== ARTISTIC STYLES ======
+    if (['watercolor', 'ink-brush', 'oil-painting', 'abstract-splash'].includes(style)) {
+      return <ArtisticStyle primaryColor={primaryColor} accentColor={accentColor} variant={style} />
+    }
+
+    if (style === 'sketch-line') {
+      return <SketchStyle primaryColor={primaryColor} />
+    }
+
+    // ====== MINIMAL STYLES ======
+    if (['minimalist', 'dot-pattern', 'line-grid'].includes(style)) {
+      return <MinimalStyle primaryColor={primaryColor} variant={style} />
+    }
+
+    // ====== CULTURAL STYLES ======
+    if (['ornate', 'baroque', 'arabesque', 'batik-indonesia'].includes(style)) {
+      return <CulturalStyle primaryColor={primaryColor} accentColor={accentColor} variant={style} />
+    }
+
+    // ====== ABSTRACT STYLES ======
+    if (['gradient-mesh', 'aurora-glow', 'bokeh-lights'].includes(style)) {
+      return <AbstractStyle primaryColor={primaryColor} accentColor={accentColor} variant={style} />
+    }
+
+    // Default fallback
+    return <BotanicalStyle primaryColor={primaryColor} accentColor={accentColor} variant="botanical" />
+  }
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Base gradient - selalu terang mengikuti tema */}
-      <BaseGradient
-        primaryColor={primaryColor}
-        accentColor={accentColor}
-        backgroundColor={backgroundColor}
-        isCover={isCover}
-      />
-
-      {/* Decoration sesuai style */}
-      {style === 'botanical' && (
-        <BotanicalStyle primaryColor={primaryColor} accentColor={accentColor} isCover={isCover} />
-      )}
-      {style === 'damask' && (
-        <DamaskStyle primaryColor={primaryColor} accentColor={accentColor} isCover={isCover} />
-      )}
-      {style === 'celestial' && (
-        <CelestialStyle primaryColor={primaryColor} accentColor={accentColor} isCover={isCover} />
-      )}
-      {style === 'artdeco' && (
-        <ArtDecoStyle primaryColor={primaryColor} accentColor={accentColor} isCover={isCover} />
-      )}
-      {style === 'glow' && (
-        <GlowStyle primaryColor={primaryColor} accentColor={accentColor} isCover={isCover} />
-      )}
-      {style === 'floral' && (
-        <FloralStyle primaryColor={primaryColor} accentColor={accentColor} isCover={isCover} />
-      )}
-
-      {/* Arch overlay */}
-      {variant === 'arch' && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div
-            className="w-[320px] h-[440px] md:w-[400px] md:h-[520px] rounded-t-full border-2 relative"
-            style={{ borderColor: `${primaryColor}40` }}
-          >
-            <div
-              className="absolute inset-3 rounded-t-full border"
-              style={{ borderColor: `${accentColor}35` }}
-            />
-          </div>
-        </div>
-      )}
+    <div
+      className={`absolute inset-0 overflow-hidden pointer-events-none ${className}`}
+      style={{ backgroundColor }}
+    >
+      {renderStyle()}
     </div>
   )
 }
 
 /* ============================================
-   BASE GRADIENT - Terang mengikuti tema
-   ============================================ */
-function BaseGradient({
-  primaryColor,
-  accentColor,
-  backgroundColor,
-  isCover,
-}: {
+   NATURE: Botanical variations
+============================================ */
+function BotanicalStyle({ primaryColor, accentColor, variant }: {
   primaryColor: string
   accentColor: string
-  backgroundColor: string
-  isCover: boolean
+  variant: string
 }) {
-  return (
-    <div
-      className="absolute inset-0"
-      style={{
-        background: isCover
-          ? `
-            radial-gradient(ellipse 90% 60% at 20% 0%, ${primaryColor}28 0%, transparent 55%),
-            radial-gradient(ellipse 70% 60% at 85% 100%, ${accentColor}26 0%, transparent 55%),
-            radial-gradient(ellipse 100% 80% at 50% 50%, ${primaryColor}10 0%, transparent 70%),
-            ${backgroundColor}
-          `
-          : `
-            radial-gradient(ellipse 80% 50% at 15% 0%, ${primaryColor}14 0%, transparent 55%),
-            radial-gradient(ellipse 60% 50% at 90% 100%, ${accentColor}12 0%, transparent 55%),
-            ${backgroundColor}
-          `,
-      }}
-    />
-  )
-}
-
-/* ============================================
-   STYLE 1: BOTANICAL GARDEN
-   ============================================ */
-function BotanicalStyle({
-  primaryColor,
-  accentColor,
-  isCover,
-}: {
-  primaryColor: string
-  accentColor: string
-  isCover: boolean
-}) {
-  const branchColor = `${primaryColor}${isCover ? '45' : '30'}`
-  const flowerColor = `${accentColor}${isCover ? '60' : '45'}`
+  const leafCount = variant === 'tropical-leaves' ? 8 : 5
+  const flowerOpacity = variant === 'floral-garden' ? 0.5 : 0
 
   return (
     <>
-      <BotanicalBranch position="top-left" color={branchColor} accent={flowerColor} />
-      <BotanicalBranch position="bottom-right" color={branchColor} accent={flowerColor} />
-
-      <div
-        className="absolute top-1/4 -left-24 w-72 h-72 rounded-full border animate-float-slow"
-        style={{ borderColor: `${primaryColor}20` }}
-      />
-      <div
-        className="absolute bottom-1/4 -right-20 w-56 h-56 rounded-full border animate-float-slow"
-        style={{ borderColor: `${accentColor}25`, animationDelay: '2s' }}
-      />
-
-      <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-3xl"
-        style={{ background: `radial-gradient(circle, ${primaryColor}${isCover ? '20' : '12'} 0%, transparent 70%)` }}
-      />
-    </>
-  )
-}
-
-function BotanicalBranch({
-  position,
-  color,
-  accent,
-}: {
-  position: 'top-left' | 'bottom-right'
-  color: string
-  accent: string
-}) {
-  const isTopLeft = position === 'top-left'
-  return (
-    <svg
-      className={`absolute w-48 h-48 md:w-72 md:h-72 ${isTopLeft ? 'top-0 left-0' : 'bottom-0 right-0 rotate-180'}`}
-      viewBox="0 0 200 200"
-      fill="none"
-      preserveAspectRatio="xMinYMin meet"
-    >
-      <path d="M-10 60 Q40 70 70 40 Q90 22 110 18" stroke={color} strokeWidth="1.5" fill="none" />
-      <path d="M0 110 Q50 100 90 70 Q120 50 150 48" stroke={color} strokeWidth="1.2" fill="none" />
-      <g fill={color}>
-        <ellipse cx="40" cy="62" rx="14" ry="5" transform="rotate(-25 40 62)" />
-        <ellipse cx="58" cy="48" rx="13" ry="5" transform="rotate(-35 58 48)" />
-        <ellipse cx="76" cy="34" rx="12" ry="4.5" transform="rotate(-42 76 34)" />
-        <ellipse cx="30" cy="75" rx="12" ry="4.5" transform="rotate(-15 30 75)" />
-      </g>
-      <g fill={color} opacity="0.8">
-        <ellipse cx="60" cy="98" rx="14" ry="5" transform="rotate(-18 60 98)" />
-        <ellipse cx="85" cy="82" rx="13" ry="5" transform="rotate(-28 85 82)" />
-        <ellipse cx="110" cy="64" rx="12" ry="4.5" transform="rotate(-35 110 64)" />
-        <ellipse cx="130" cy="54" rx="11" ry="4" transform="rotate(-40 130 54)" />
-      </g>
-      <g transform="translate(105, 22)">
-        <circle cx="0" cy="-9" r="7" fill={accent} />
-        <circle cx="8.5" cy="-2.8" r="7" fill={accent} />
-        <circle cx="5.3" cy="7.3" r="7" fill={accent} />
-        <circle cx="-5.3" cy="7.3" r="7" fill={accent} />
-        <circle cx="-8.5" cy="-2.8" r="7" fill={accent} />
-        <circle cx="0" cy="0" r="4.5" fill={color} />
-      </g>
-      <g transform="translate(148, 50) scale(0.6)">
-        <circle cx="0" cy="-9" r="7" fill={accent} opacity="0.8" />
-        <circle cx="8.5" cy="-2.8" r="7" fill={accent} opacity="0.8" />
-        <circle cx="5.3" cy="7.3" r="7" fill={accent} opacity="0.8" />
-        <circle cx="-5.3" cy="7.3" r="7" fill={accent} opacity="0.8" />
-        <circle cx="-8.5" cy="-2.8" r="7" fill={accent} opacity="0.8" />
-        <circle cx="0" cy="0" r="4.5" fill={color} />
-      </g>
-      <circle cx="95" cy="30" r="2.5" fill={accent} />
-      <circle cx="125" cy="60" r="2" fill={accent} />
-      <circle cx="70" cy="88" r="2" fill={accent} opacity="0.7" />
-      <circle cx="140" cy="70" r="1.8" fill={accent} opacity="0.6" />
-    </svg>
-  )
-}
-
-/* ============================================
-   STYLE 2: ROYAL DAMASK
-   ============================================ */
-function DamaskStyle({
-  primaryColor,
-  accentColor,
-  isCover,
-}: {
-  primaryColor: string
-  accentColor: string
-  isCover: boolean
-}) {
-  const patternColor = `${primaryColor}${isCover ? '20' : '14'}`
-  const frameColor = `${primaryColor}${isCover ? '45' : '35'}`
-
-  return (
-    <>
-      <svg className="absolute inset-0 w-full h-full" style={{ opacity: isCover ? 0.5 : 0.4 }}>
-        <defs>
-          <pattern id="damask-full" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-            <path d="M40 15 C50 25 55 35 40 45 C25 35 30 25 40 15 Z" fill={patternColor} />
-            <path d="M40 65 C50 55 55 45 40 35 C25 45 30 55 40 65 Z" fill={patternColor} />
-            <circle cx="15" cy="40" r="2" fill={patternColor} />
-            <circle cx="65" cy="40" r="2" fill={patternColor} />
-            <circle cx="40" cy="40" r="3" fill={patternColor} />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#damask-full)" />
+      {/* Top-left leaves */}
+      <svg
+        className="absolute top-0 left-0 w-72 h-72 opacity-20"
+        viewBox="0 0 200 200"
+        fill="none"
+      >
+        <path d="M20 180 Q60 120 40 60 Q80 100 100 40" stroke={primaryColor} strokeWidth="1.5" fill="none" />
+        {[...Array(leafCount)].map((_, i) => (
+          <ellipse
+            key={i}
+            cx={30 + i * 15}
+            cy={60 + i * 10}
+            rx="8"
+            ry="20"
+            fill={i % 2 === 0 ? primaryColor : accentColor}
+            opacity={0.3 + (i % 3) * 0.1}
+            transform={`rotate(${-30 - i * 5} ${30 + i * 15} ${60 + i * 10})`}
+          />
+        ))}
+        {/* Flowers for floral-garden */}
+        {variant === 'floral-garden' && (
+          <>
+            {[...Array(4)].map((_, i) => (
+              <g key={`flower-${i}`} opacity={flowerOpacity}>
+                <circle cx={50 + i * 30} cy={100 + (i % 2) * 30} r="6" fill={accentColor} />
+                <circle cx={50 + i * 30} cy={100 + (i % 2) * 30} r="3" fill={primaryColor} />
+              </g>
+            ))}
+          </>
+        )}
       </svg>
 
-      <div className="absolute inset-4 md:inset-8 border-2 rounded-lg" style={{ borderColor: frameColor }} />
-      <div className="absolute inset-6 md:inset-10 border rounded-lg" style={{ borderColor: `${accentColor}30` }} />
-
-      <CornerFlourish position="top-left" color={frameColor} />
-      <CornerFlourish position="top-right" color={frameColor} />
-      <CornerFlourish position="bottom-left" color={frameColor} />
-      <CornerFlourish position="bottom-right" color={frameColor} />
-
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl"
-        style={{ background: `radial-gradient(circle, ${accentColor}15 0%, transparent 70%)` }}
-      />
+      {/* Bottom-right leaves (mirror) */}
+      <svg
+        className="absolute bottom-0 right-0 w-72 h-72 opacity-20 rotate-180"
+        viewBox="0 0 200 200"
+        fill="none"
+      >
+        <path d="M20 180 Q60 120 40 60 Q80 100 100 40" stroke={primaryColor} strokeWidth="1.5" fill="none" />
+        {[...Array(leafCount)].map((_, i) => (
+          <ellipse
+            key={i}
+            cx={30 + i * 15}
+            cy={60 + i * 10}
+            rx="8"
+            ry="20"
+            fill={i % 2 === 0 ? primaryColor : accentColor}
+            opacity={0.3 + (i % 3) * 0.1}
+            transform={`rotate(${-30 - i * 5} ${30 + i * 15} ${60 + i * 10})`}
+          />
+        ))}
+      </svg>
     </>
   )
 }
 
-function CornerFlourish({
-  position,
-  color,
-}: {
-  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-  color: string
-}) {
-  const positions = {
-    'top-left': 'top-8 left-8 md:top-14 md:left-14',
-    'top-right': 'top-8 right-8 md:top-14 md:right-14 rotate-90',
-    'bottom-right': 'bottom-8 right-8 md:bottom-14 md:right-14 rotate-180',
-    'bottom-left': 'bottom-8 left-8 md:bottom-14 md:left-14 -rotate-90',
-  }
-
-  return (
-    <svg className={`absolute w-16 h-16 md:w-20 md:h-20 ${positions[position]}`} viewBox="0 0 80 80" fill="none">
-      <path d="M10 10 Q30 10 35 30 Q40 50 60 55" stroke={color} strokeWidth="1.5" fill="none" />
-      <path d="M10 10 Q10 30 30 35" stroke={color} strokeWidth="1" fill="none" />
-      <circle cx="10" cy="10" r="3" fill={color} />
-      <circle cx="35" cy="30" r="2" fill={color} />
-      <circle cx="60" cy="55" r="2.5" fill={color} />
-    </svg>
-  )
-}
-
 /* ============================================
-   STYLE 3: CELESTIAL (bintang emas di bg terang)
-   ============================================ */
-function CelestialStyle({
-  primaryColor,
-  accentColor,
-  isCover,
-}: {
+   NATURE: Sky & Water
+============================================ */
+function SkyWaterStyle({ primaryColor, accentColor, variant }: {
   primaryColor: string
   accentColor: string
-  isCover: boolean
+  variant: string
 }) {
-  const starColor = `${primaryColor}${isCover ? '70' : '55'}`
-
-  const stars = Array.from({ length: 40 }, (_, i) => ({
-    id: i,
-    x: ((i * 37) % 100),
-    y: ((i * 53) % 100),
-    size: (i % 3) + 1.5,
-    opacity: 0.3 + ((i % 5) * 0.12),
-  }))
-
   return (
     <>
-      {stars.map((star) => (
+      {/* Soft gradients */}
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          background: `
+            radial-gradient(ellipse at 30% 20%, ${accentColor}40 0%, transparent 50%),
+            radial-gradient(ellipse at 70% 80%, ${primaryColor}30 0%, transparent 50%)
+          `,
+        }}
+      />
+
+      {variant === 'ocean-waves' ? (
+        <svg className="absolute bottom-0 left-0 w-full h-48 opacity-25" preserveAspectRatio="none">
+          <path
+            d="M0 100 Q25 80 50 100 T100 100 T150 100 T200 100 L200 200 L0 200 Z"
+            fill={primaryColor}
+            opacity="0.3"
+          />
+          <path
+            d="M0 130 Q25 110 50 130 T100 130 T150 130 T200 130 L200 200 L0 200 Z"
+            fill={accentColor}
+            opacity="0.25"
+          />
+        </svg>
+      ) : (
         <div
-          key={star.id}
-          className="absolute rounded-full animate-pulse-soft"
+          className="absolute top-0 left-0 w-full h-full opacity-25"
           style={{
-            left: `${star.x}%`,
-            top: `${star.y}%`,
-            width: star.size,
-            height: star.size,
-            backgroundColor: starColor,
-            opacity: star.opacity,
-            animationDelay: `${star.id * 0.2}s`,
+            background: `
+              radial-gradient(circle at 20% 30%, ${accentColor}50 0%, transparent 25%),
+              radial-gradient(circle at 60% 20%, ${accentColor}40 0%, transparent 30%),
+              radial-gradient(circle at 80% 40%, ${accentColor}45 0%, transparent 28%)
+            `,
           }}
         />
-      ))}
-
-      <div
-        className="absolute top-16 right-12 w-32 h-32 rounded-full blur-2xl"
-        style={{ background: `radial-gradient(circle, ${accentColor}35 0%, transparent 70%)` }}
-      />
-      <div
-        className="absolute top-20 right-16 w-20 h-20 rounded-full border"
-        style={{ borderColor: `${accentColor}40` }}
-      />
-
-      <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[550px] h-[550px] rounded-full blur-3xl"
-        style={{ background: `radial-gradient(circle, ${primaryColor}12 0%, transparent 70%)` }}
-      />
+      )}
     </>
   )
 }
 
 /* ============================================
-   STYLE 4: ART DECO
-   ============================================ */
-function ArtDecoStyle({
-  primaryColor,
-  accentColor,
-  isCover,
-}: {
+   NATURE: Starry Night
+============================================ */
+function StarryNightStyle({ primaryColor, accentColor }: {
   primaryColor: string
   accentColor: string
-  isCover: boolean
-}) {
-  const lineColor = `${primaryColor}${isCover ? '40' : '28'}`
-  const accentLine = `${accentColor}${isCover ? '55' : '40'}`
-
-  return (
-    <>
-      <DecoFan position="top-left" color={lineColor} accent={accentLine} />
-      <DecoFan position="bottom-right" color={lineColor} accent={accentLine} />
-
-      <div className="absolute top-0 bottom-0 left-8 w-px hidden md:block" style={{ backgroundColor: lineColor }} />
-      <div className="absolute top-0 bottom-0 right-8 w-px hidden md:block" style={{ backgroundColor: lineColor }} />
-
-      <svg className="absolute top-1/4 left-1/2 -translate-x-1/2 w-40 h-40" style={{ opacity: 0.6 }} viewBox="0 0 100 100" fill="none">
-        <rect x="35" y="35" width="30" height="30" transform="rotate(45 50 50)" stroke={accentLine} strokeWidth="1" />
-        <rect x="25" y="25" width="50" height="50" transform="rotate(45 50 50)" stroke={lineColor} strokeWidth="1" />
-        <rect x="15" y="15" width="70" height="70" transform="rotate(45 50 50)" stroke={lineColor} strokeWidth="0.5" />
-        <circle cx="50" cy="50" r="3" fill={accentLine} />
-      </svg>
-
-      <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-3xl"
-        style={{ background: `radial-gradient(circle, ${primaryColor}12 0%, transparent 70%)` }}
-      />
-    </>
-  )
-}
-
-function DecoFan({
-  position,
-  color,
-  accent,
-}: {
-  position: 'top-left' | 'bottom-right'
-  color: string
-  accent: string
-}) {
-  const isTopLeft = position === 'top-left'
-  return (
-    <svg
-      className={`absolute w-40 h-40 md:w-56 md:h-56 ${isTopLeft ? 'top-0 left-0' : 'bottom-0 right-0 rotate-180'}`}
-      viewBox="0 0 160 160"
-      fill="none"
-    >
-      <path d="M0 0 L160 160" stroke={color} strokeWidth="1" />
-      <path d="M0 0 L130 160" stroke={color} strokeWidth="0.8" />
-      <path d="M0 0 L100 160" stroke={color} strokeWidth="0.8" />
-      <path d="M0 0 L70 160" stroke={color} strokeWidth="0.8" />
-      <path d="M0 0 L160 130" stroke={color} strokeWidth="0.8" />
-      <path d="M0 0 L160 100" stroke={color} strokeWidth="0.8" />
-      <path d="M0 0 L160 70" stroke={color} strokeWidth="0.8" />
-      <path d="M0 0 Q80 20 110 110" stroke={accent} strokeWidth="1" fill="none" />
-      <path d="M0 0 Q50 30 70 70" stroke={accent} strokeWidth="0.8" fill="none" />
-      <circle cx="20" cy="20" r="4" fill={accent} />
-      <circle cx="20" cy="20" r="8" stroke={accent} strokeWidth="1" fill="none" />
-    </svg>
-  )
-}
-
-/* ============================================
-   STYLE 5: MINIMALIST GLOW
-   ============================================ */
-function GlowStyle({
-  primaryColor,
-  accentColor,
-  isCover,
-}: {
-  primaryColor: string
-  accentColor: string
-  isCover: boolean
 }) {
   return (
     <>
       <div
-        className="absolute top-20 left-10 w-64 h-64 rounded-full blur-3xl animate-float-slow"
-        style={{ background: `${primaryColor}${isCover ? '30' : '20'}` }}
+        className="absolute inset-0 opacity-40"
+        style={{
+          background: `
+            radial-gradient(circle at 15% 25%, ${primaryColor}30 1px, transparent 2px),
+            radial-gradient(circle at 35% 65%, ${primaryColor}25 1px, transparent 2px),
+            radial-gradient(circle at 55% 15%, ${primaryColor}30 1.5px, transparent 2.5px),
+            radial-gradient(circle at 75% 45%, ${primaryColor}25 1px, transparent 2px),
+            radial-gradient(circle at 90% 75%, ${primaryColor}30 1px, transparent 2px),
+            radial-gradient(circle at 45% 85%, ${primaryColor}20 1.5px, transparent 2.5px),
+            radial-gradient(circle at 25% 55%, ${primaryColor}25 1px, transparent 2px),
+            radial-gradient(circle at 85% 20%, ${primaryColor}30 1px, transparent 2px)
+          `,
+        }}
       />
-      <div
-        className="absolute bottom-32 right-8 w-72 h-72 rounded-full blur-3xl animate-float-slow"
-        style={{ background: `${accentColor}${isCover ? '28' : '18'}`, animationDelay: '3s' }}
-      />
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl"
-        style={{ background: `${primaryColor}12` }}
-      />
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border animate-float-slow"
-        style={{ borderColor: `${primaryColor}15` }}
-      />
+      {/* Glow orbs */}
+      <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full blur-3xl" style={{ backgroundColor: `${accentColor}20` }} />
+      <div className="absolute bottom-1/3 right-1/4 w-40 h-40 rounded-full blur-3xl" style={{ backgroundColor: `${primaryColor}15` }} />
     </>
   )
 }
 
 /* ============================================
-   STYLE 6: FLORAL ROMANCE
-   ============================================ */
-function FloralStyle({
-  primaryColor,
-  accentColor,
-  isCover,
-}: {
+   GEOMETRIC STYLES
+============================================ */
+function GeometricStyle({ primaryColor, accentColor, variant }: {
   primaryColor: string
   accentColor: string
-  isCover: boolean
+  variant: string
 }) {
-  const petalColor = `${primaryColor}${isCover ? '30' : '22'}`
-  const centerColor = `${accentColor}${isCover ? '50' : '40'}`
-
-  return (
-    <>
-      <LargeFlower position="top-left" petal={petalColor} center={centerColor} size={200} />
-      <LargeFlower position="bottom-right" petal={petalColor} center={centerColor} size={180} />
-      <LargeFlower position="top-right" petal={petalColor} center={centerColor} size={120} />
-      <LargeFlower position="bottom-left" petal={petalColor} center={centerColor} size={100} />
-
-      <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full blur-3xl"
-        style={{ background: `radial-gradient(circle, ${accentColor}15 0%, transparent 70%)` }}
-      />
-    </>
-  )
-}
-
-function LargeFlower({
-  position,
-  petal,
-  center,
-  size,
-}: {
-  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-  petal: string
-  center: string
-  size: number
-}) {
-  const positions = {
-    'top-left': 'top-0 left-0 -translate-x-1/4 -translate-y-1/4',
-    'top-right': 'top-0 right-0 translate-x-1/4 -translate-y-1/4',
-    'bottom-left': 'bottom-0 left-0 -translate-x-1/4 translate-y-1/4',
-    'bottom-right': 'bottom-0 right-0 translate-x-1/4 translate-y-1/4',
+  if (variant === 'art-deco') {
+    return (
+      <>
+        <div
+          className="absolute inset-0 opacity-15"
+          style={{
+            backgroundImage: `repeating-linear-gradient(
+              45deg,
+              ${primaryColor}20,
+              ${primaryColor}20 2px,
+              transparent 2px,
+              transparent 20px
+            )`,
+          }}
+        />
+        <svg className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 opacity-30" viewBox="0 0 400 100" fill="none">
+          <path d="M50 80 L200 20 L350 80" stroke={primaryColor} strokeWidth="1.5" fill="none" />
+          <path d="M80 90 L200 40 L320 90" stroke={accentColor} strokeWidth="1" fill="none" />
+          <circle cx="200" cy="20" r="5" fill={primaryColor} />
+          <circle cx="50" cy="80" r="3" fill={accentColor} />
+          <circle cx="350" cy="80" r="3" fill={accentColor} />
+        </svg>
+      </>
+    )
   }
 
+  if (variant === 'hexagon-grid') {
+    return (
+      <svg className="absolute inset-0 w-full h-full opacity-10" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <pattern id="hexPattern" width="56" height="100" patternUnits="userSpaceOnUse">
+            <path
+              d="M28 0 L56 25 L56 75 L28 100 L0 75 L0 25 Z"
+              fill="none"
+              stroke={primaryColor}
+              strokeWidth="1"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#hexPattern)" />
+      </svg>
+    )
+  }
+
+  if (variant === 'triangle-mosaic') {
+    return (
+      <div
+        className="absolute inset-0 opacity-15"
+        style={{
+          backgroundImage: `
+            linear-gradient(60deg, ${primaryColor}15 25%, transparent 25.5%),
+            linear-gradient(-60deg, ${accentColor}15 25%, transparent 25.5%)
+          `,
+          backgroundSize: '80px 140px',
+        }}
+      />
+    )
+  }
+
+  if (variant === 'circular-ripple') {
+    return (
+      <>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border"
+              style={{
+                width: `${200 + i * 100}px`,
+                height: `${200 + i * 100}px`,
+                borderColor: `${primaryColor}${Math.max(10, 30 - i * 5).toString(16).padStart(2, '0')}`,
+              }}
+            />
+          ))}
+        </div>
+      </>
+    )
+  }
+
+  // Default geometric
   return (
-    <svg
-      className={`absolute ${positions[position]}`}
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-    >
-      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
-        <ellipse
-          key={angle}
-          cx="50"
-          cy="28"
-          rx="11"
-          ry="20"
-          fill={petal}
-          transform={`rotate(${angle} 50 50)`}
+    <>
+      <div
+        className="absolute top-0 left-0 w-full h-full opacity-10"
+        style={{
+          backgroundImage: `linear-gradient(30deg, ${primaryColor} 12%, transparent 12.5%, transparent 87%, ${primaryColor} 87.5%, ${primaryColor}),
+            linear-gradient(150deg, ${primaryColor} 12%, transparent 12.5%, transparent 87%, ${primaryColor} 87.5%, ${primaryColor})`,
+          backgroundSize: '80px 140px',
+        }}
+      />
+      <div className="absolute top-10 right-10 w-32 h-32 border-2 rotate-45" style={{ borderColor: `${primaryColor}40` }} />
+      <div className="absolute bottom-10 left-10 w-24 h-24 border-2 rotate-12" style={{ borderColor: `${accentColor}40` }} />
+    </>
+  )
+}
+
+/* ============================================
+   TEXTURE: Stone/Marble
+============================================ */
+function StoneTextureStyle({ primaryColor, accentColor, variant }: {
+  primaryColor: string
+  accentColor: string
+  variant: string
+}) {
+  return (
+    <>
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          background: `
+            radial-gradient(ellipse at 20% 30%, ${primaryColor}15 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 70%, ${accentColor}20 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 50%, ${primaryColor}08 0%, transparent 70%)
+          `,
+        }}
+      />
+      <svg className="absolute inset-0 w-full h-full opacity-10" preserveAspectRatio="none">
+        <filter id={`noise-${variant}`}>
+          <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter={`url(#noise-${variant})`} />
+      </svg>
+    </>
+  )
+}
+
+/* ============================================
+   TEXTURE: Paper/Wood
+============================================ */
+function PaperTextureStyle({ primaryColor, accentColor, variant }: {
+  primaryColor: string
+  accentColor: string
+  variant: string
+}) {
+  const frequency = variant === 'linen-weave' ? '0.1 0.3' : variant === 'rustic-wood' ? '0.01 0.05' : '0.05 0.08'
+
+  return (
+    <>
+      <svg className="absolute inset-0 w-full h-full opacity-15" preserveAspectRatio="none">
+        <filter id={`paper-${variant}`}>
+          <feTurbulence type="fractalNoise" baseFrequency={frequency} numOctaves="4" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0, 0 0 0 0 0, 0 0 0 0 0, 0 0 0 0.5 0" />
+        </filter>
+        <rect width="100%" height="100%" filter={`url(#paper-${variant})`} />
+      </svg>
+      {variant === 'rustic-wood' && (
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `repeating-linear-gradient(
+              90deg,
+              transparent,
+              transparent 50px,
+              ${primaryColor}08 50px,
+              ${primaryColor}08 52px
+            )`,
+          }}
         />
-      ))}
-      {[22, 67, 112, 157, 202, 247, 292, 337].map((angle) => (
-        <ellipse
-          key={angle}
-          cx="50"
-          cy="35"
-          rx="7"
-          ry="13"
-          fill={petal}
-          opacity="0.7"
-          transform={`rotate(${angle} 50 50)`}
+      )}
+    </>
+  )
+}
+
+/* ============================================
+   TEXTURE: Silk
+============================================ */
+function SilkStyle({ primaryColor, accentColor }: {
+  primaryColor: string
+  accentColor: string
+}) {
+  return (
+    <>
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          background: `
+            linear-gradient(120deg, ${primaryColor}15 0%, transparent 30%, ${accentColor}15 60%, transparent 90%)
+          `,
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            105deg,
+            transparent,
+            transparent 3px,
+            ${primaryColor}08 3px,
+            ${primaryColor}08 4px
+          )`,
+        }}
+      />
+    </>
+  )
+}
+
+/* ============================================
+   ARTISTIC STYLES
+============================================ */
+function ArtisticStyle({ primaryColor, accentColor, variant }: {
+  primaryColor: string
+  accentColor: string
+  variant: string
+}) {
+  return (
+    <>
+      <div
+        className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl opacity-20"
+        style={{ backgroundColor: primaryColor }}
+      />
+      <div
+        className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-15"
+        style={{ backgroundColor: accentColor }}
+      />
+      <div
+        className="absolute top-1/3 right-1/4 w-64 h-64 rounded-full blur-3xl opacity-10"
+        style={{ backgroundColor: accentColor }}
+      />
+
+      {variant === 'ink-brush' && (
+        <svg className="absolute top-10 right-10 w-32 h-32 opacity-20" viewBox="0 0 100 100">
+          <path
+            d="M20 50 Q30 20 50 30 T80 50 Q70 80 50 70 T20 50"
+            fill={primaryColor}
+            opacity="0.5"
+          />
+        </svg>
+      )}
+
+      {variant === 'oil-painting' && (
+        <div
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage: `repeating-radial-gradient(
+              circle at 30% 30%,
+              ${primaryColor}10,
+              ${primaryColor}10 20px,
+              transparent 20px,
+              transparent 40px
+            )`,
+          }}
         />
-      ))}
-      <circle cx="50" cy="50" r="9" fill={center} />
-      <circle cx="50" cy="50" r="5" fill={petal} />
+      )}
+    </>
+  )
+}
+
+/* ============================================
+   ARTISTIC: Sketch
+============================================ */
+function SketchStyle({ primaryColor }: { primaryColor: string }) {
+  return (
+    <svg className="absolute inset-0 w-full h-full opacity-15" preserveAspectRatio="none">
+      <path d="M50 100 Q150 50 250 120 T450 80" stroke={primaryColor} strokeWidth="0.5" fill="none" strokeDasharray="3,3" />
+      <path d="M100 300 Q200 250 300 320 T500 280" stroke={primaryColor} strokeWidth="0.5" fill="none" strokeDasharray="2,4" />
+      <circle cx="150" cy="150" r="40" stroke={primaryColor} strokeWidth="0.5" fill="none" strokeDasharray="4,2" />
     </svg>
+  )
+}
+
+/* ============================================
+   MINIMAL STYLES
+============================================ */
+function MinimalStyle({ primaryColor, variant }: {
+  primaryColor: string
+  variant: string
+}) {
+  if (variant === 'dot-pattern') {
+    return (
+      <div
+        className="absolute inset-0 opacity-15"
+        style={{
+          backgroundImage: `radial-gradient(${primaryColor} 1px, transparent 1px)`,
+          backgroundSize: '24px 24px',
+        }}
+      />
+    )
+  }
+
+  if (variant === 'line-grid') {
+    return (
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `
+            linear-gradient(${primaryColor} 1px, transparent 1px),
+            linear-gradient(90deg, ${primaryColor} 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+        }}
+      />
+    )
+  }
+
+  // Minimalist
+  return (
+    <>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-24" style={{ backgroundColor: `${primaryColor}30` }} />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-24" style={{ backgroundColor: `${primaryColor}30` }} />
+      <div className="absolute top-1/2 left-0 w-12 h-px" style={{ backgroundColor: `${primaryColor}30` }} />
+      <div className="absolute top-1/2 right-0 w-12 h-px" style={{ backgroundColor: `${primaryColor}30` }} />
+    </>
+  )
+}
+
+/* ============================================
+   CULTURAL STYLES
+============================================ */
+function CulturalStyle({ primaryColor, accentColor, variant }: {
+  primaryColor: string
+  accentColor: string
+  variant: string
+}) {
+  if (variant === 'arabesque' || variant === 'batik-indonesia') {
+    return (
+      <>
+        <svg className="absolute inset-0 w-full h-full opacity-15" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <pattern id={`cultural-${variant}`} width="60" height="60" patternUnits="userSpaceOnUse">
+              <path
+                d="M30 5 L55 30 L30 55 L5 30 Z"
+                fill="none"
+                stroke={primaryColor}
+                strokeWidth="0.8"
+              />
+              <circle cx="30" cy="30" r="8" fill="none" stroke={accentColor} strokeWidth="0.5" />
+              <circle cx="30" cy="30" r="3" fill={primaryColor} opacity="0.3" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill={`url(#cultural-${variant})`} />
+        </svg>
+      </>
+    )
+  }
+
+  if (variant === 'baroque') {
+    return (
+      <>
+        <svg className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 opacity-30" viewBox="0 0 400 150" fill="none">
+          <path d="M50 75 Q100 25 150 75 T250 75 T350 75" stroke={primaryColor} strokeWidth="1.5" fill="none" />
+          <path d="M75 90 Q125 50 175 90 T275 90" stroke={accentColor} strokeWidth="0.8" fill="none" />
+          <circle cx="200" cy="40" r="6" fill={primaryColor} />
+          <path d="M190 40 Q200 30 210 40 Q200 50 190 40" fill={accentColor} opacity="0.6" />
+          <circle cx="150" cy="60" r="3" fill={accentColor} />
+          <circle cx="250" cy="60" r="3" fill={accentColor} />
+        </svg>
+        <svg className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-48 opacity-30 rotate-180" viewBox="0 0 400 150" fill="none">
+          <path d="M50 75 Q100 25 150 75 T250 75 T350 75" stroke={primaryColor} strokeWidth="1.5" fill="none" />
+          <path d="M75 90 Q125 50 175 90 T275 90" stroke={accentColor} strokeWidth="0.8" fill="none" />
+          <circle cx="200" cy="40" r="6" fill={primaryColor} />
+          <path d="M190 40 Q200 30 210 40 Q200 50 190 40" fill={accentColor} opacity="0.6" />
+        </svg>
+      </>
+    )
+  }
+
+  // Ornate (default)
+  return (
+    <>
+      <svg className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-40 opacity-30" viewBox="0 0 400 100" fill="none">
+        <path d="M50 50 Q200 0 350 50" stroke={primaryColor} strokeWidth="1" fill="none" />
+        <path d="M80 60 Q200 20 320 60" stroke={accentColor} strokeWidth="0.5" fill="none" />
+        <circle cx="200" cy="30" r="4" fill={primaryColor} />
+        <circle cx="150" cy="40" r="2" fill={accentColor} />
+        <circle cx="250" cy="40" r="2" fill={accentColor} />
+        <path d="M190 30 Q200 20 210 30 Q200 40 190 30" fill={accentColor} opacity="0.5" />
+      </svg>
+      <svg className="absolute bottom-0 left-1/2 -translate-x-1/2 w-80 h-40 opacity-30 rotate-180" viewBox="0 0 400 100" fill="none">
+        <path d="M50 50 Q200 0 350 50" stroke={primaryColor} strokeWidth="1" fill="none" />
+        <path d="M80 60 Q200 20 320 60" stroke={accentColor} strokeWidth="0.5" fill="none" />
+        <circle cx="200" cy="30" r="4" fill={primaryColor} />
+        <circle cx="150" cy="40" r="2" fill={accentColor} />
+        <circle cx="250" cy="40" r="2" fill={accentColor} />
+      </svg>
+    </>
+  )
+}
+
+/* ============================================
+   ABSTRACT STYLES
+============================================ */
+function AbstractStyle({ primaryColor, accentColor, variant }: {
+  primaryColor: string
+  accentColor: string
+  variant: string
+}) {
+  if (variant === 'aurora-glow') {
+    return (
+      <>
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            background: `
+              radial-gradient(ellipse 80% 50% at 20% 20%, ${primaryColor}30 0%, transparent 60%),
+              radial-gradient(ellipse 60% 40% at 80% 30%, ${accentColor}25 0%, transparent 60%),
+              radial-gradient(ellipse 70% 50% at 50% 80%, ${primaryColor}20 0%, transparent 60%)
+            `,
+          }}
+        />
+      </>
+    )
+  }
+
+  if (variant === 'bokeh-lights') {
+    return (
+      <>
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full blur-xl"
+            style={{
+              width: `${30 + (i % 5) * 20}px`,
+              height: `${30 + (i % 5) * 20}px`,
+              left: `${(i * 8.5) % 100}%`,
+              top: `${(i * 13) % 100}%`,
+              backgroundColor: i % 2 === 0 ? `${primaryColor}30` : `${accentColor}30`,
+            }}
+          />
+        ))}
+      </>
+    )
+  }
+
+  // Gradient mesh (default)
+  return (
+    <div
+      className="absolute inset-0 opacity-40"
+      style={{
+        background: `
+          radial-gradient(at 0% 0%, ${primaryColor}25 0px, transparent 50%),
+          radial-gradient(at 100% 0%, ${accentColor}20 0px, transparent 50%),
+          radial-gradient(at 100% 100%, ${primaryColor}25 0px, transparent 50%),
+          radial-gradient(at 0% 100%, ${accentColor}20 0px, transparent 50%)
+        `,
+      }}
+    />
   )
 }
