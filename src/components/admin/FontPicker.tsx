@@ -139,7 +139,7 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
                     opacity: fontsReady ? 1 : 0.3,
                   }}
                 >
-                  Aurelia & Arjuna
+                  Wanita & Pria
                 </p>
                 <p
                   className="text-lg font-semibold mb-1 transition-opacity duration-500"
