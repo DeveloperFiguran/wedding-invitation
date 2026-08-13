@@ -2,9 +2,9 @@
 
 import { motion } from 'framer-motion'
 import { Check, Type } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { FONT_PRESETS, FONT_CATEGORIES } from '@/lib/fonts'
-import { FontLoader } from '@/components/FontLoader'
+import { MultiFontLoader } from '@/components/MultiFontLoader'
 
 interface FontPickerProps {
   currentPreset: string
@@ -13,19 +13,21 @@ interface FontPickerProps {
 
 export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
   const [activeCategory, setActiveCategory] = useState('all')
-  const [previewFont, setPreviewFont] = useState<string | null>(null)
 
   const filteredFonts = activeCategory === 'all'
     ? FONT_PRESETS
     : FONT_PRESETS.filter((f) => f.category === activeCategory)
 
+  // IDs font yang ditampilkan untuk di-load
+  const visibleFontIds = useMemo(
+    () => filteredFonts.map((f) => f.id),
+    [filteredFonts]
+  )
+
   return (
     <div className="space-y-4">
-      {/* ✅ Load font yang sedang di-hover untuk preview */}
-      {previewFont && <FontLoader presetId={previewFont} />}
-
-      {/* ✅ Load font current */}
-      <FontLoader presetId={currentPreset} />
+      {/* ✅ Load semua fonts yang visible untuk preview */}
+      <MultiFontLoader presetIds={visibleFontIds} />
 
       <div className="flex items-center gap-2 text-[#6B5B5B]">
         <Type size={18} className="text-[#C9A96E]" />
@@ -59,8 +61,6 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
             <motion.button
               key={font.id}
               onClick={() => onSelect(font.id)}
-              onMouseEnter={() => setPreviewFont(font.id)}
-              onMouseLeave={() => setPreviewFont(null)}
               className={`relative rounded-2xl p-5 border-2 text-left transition-all duration-300 ${
                 isCurrent
                   ? 'border-[#C9A96E] bg-[#C9A96E]/5 shadow-lg shadow-[#C9A96E]/20'
@@ -78,8 +78,9 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
                 </div>
               )}
 
-              {/* ====== PREVIEW FONT ====== */}
+              {/* ====== PREVIEW FONT (4 baris) ====== */}
               <div className="mb-3 pb-3 border-b border-[#C9A96E]/10">
+                {/* Script font - nama pengantin */}
                 <p
                   className="text-3xl mb-2"
                   style={{
@@ -87,10 +88,11 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
                     color: '#C9A96E',
                   }}
                 >
-                  {font.preview}
+                  Aurelia & Arjuna
                 </p>
+                {/* Display font - heading */}
                 <p
-                  className="text-base font-medium mb-1"
+                  className="text-lg font-semibold mb-1"
                   style={{
                     fontFamily: `'${font.display}', ${font.displayFallback}`,
                     color: '#3D342B',
@@ -98,17 +100,19 @@ export function FontPicker({ currentPreset, onSelect }: FontPickerProps) {
                 >
                   The Wedding Celebration
                 </p>
+                {/* Elegant font - quote */}
                 <p
-                  className="text-sm italic"
+                  className="text-sm italic mb-1"
                   style={{
                     fontFamily: `'${font.elegant}', ${font.elegantFallback}`,
                     color: '#6B5B5B',
                   }}
                 >
-                  Kami mengundang Anda untuk hadir
+                  "Kami mengundang Anda untuk hadir"
                 </p>
+                {/* Body font - info */}
                 <p
-                  className="text-xs mt-1"
+                  className="text-xs"
                   style={{
                     fontFamily: `'${font.body}', ${font.bodyFallback}`,
                     color: '#8A7F75',
