@@ -415,7 +415,7 @@ export default function AdminSettings() {
   />
 </Card>
 
-{/* STYLE BACKGROUND (32 Pilihan) */}
+      {/* STYLE BACKGROUND dengan preview warna current */}
 <Card
   title="Style Background"
   subtitle="Pilih gaya background untuk area tanpa foto"
@@ -424,6 +424,9 @@ export default function AdminSettings() {
   <BackgroundStylePicker
     currentStyle={settings.background_style || 'botanical'}
     onSelect={(styleId) => updateField('background_style', styleId)}
+    primaryColor={settings.primary_color}
+    accentColor={settings.accent_color}
+    backgroundColor={settings.background_color}
   />
 </Card>
 
